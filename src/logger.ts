@@ -61,7 +61,13 @@ export class CustomLogger implements GenericLogger {
         if ('error' in arg && arg.error instanceof Error) {
           return this.formatError(arg.error);
         }
-        return JSON.stringify(arg, null, 2);
+        try {
+          return JSON.stringify(arg, null, 2);
+        } catch (e) {
+          // If JSON.stringify fails (e.g., due to circular references),
+          // return a simplified version of the object
+          return '[Object with circular references]';
+        }
       }
       return String(arg);
     }).join(' ');
@@ -88,11 +94,16 @@ export class CustomLogger implements GenericLogger {
 export const requestLogger = (logger: CustomLogger) => (req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
   
-  // Log request
+  // Log request with safe properties only
   logger.info(`${req.method} ${req.url}`, {
-    headers: req.headers,
+    headers: {
+      'content-type': req.headers['content-type'],
+      'user-agent': req.headers['user-agent'],
+      'accept': req.headers['accept'],
+      'host': req.headers['host']
+    },
     query: req.query,
-    body: req.body,
+    body: req.body
   });
 
   // Log response
@@ -113,12 +124,13 @@ export const errorHandler = (logger: CustomLogger) => (err: Error, req: Request,
     stack: err.stack,
     path: req.path,
     method: req.method,
-    body: req.body,
-    error: err
+    body: req.body
   });
   
-  res.status(500).json({
-    status: 'error',
-    message: err.message
-  });
+  if (!res.headersSent) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
 }; 

@@ -1,52 +1,118 @@
-import { User, UserAttributes } from './database/models/user';
-import { CreationAttributes } from 'sequelize';
-import { ApiError, NotFoundError, ValidationError, ConflictError } from './errors/api.error';
+import { User } from './database/models/user.model';
+import { ApiError, ValidationError, NotFoundError, ConflictError } from './errors/api.error';
 import { UniqueConstraintError, ValidationError as SequelizeValidationError } from 'sequelize';
 
 export class ExampleService {
+  private static toPlainUser(user: User) {
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      last_login_at: user.last_login_at,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
+  }
+
   static async getAllItems() {
     try {
-      return await User.findAll();
+      const users = await User.findAll();
+      return users.map(user => this.toPlainUser(user));
     } catch (error) {
+      console.error('Error in getAllItems:', error);
       throw new ApiError(500, 'Failed to fetch users', error);
     }
   }
 
   static async getItemById(id: number) {
-    const user = await User.findByPk(id);
-    if (!user) {
-      throw new NotFoundError(`User with id ${id} not found`);
+    try {
+      const user = await User.findByPk(id);
+      if (!user) {
+        throw new NotFoundError(`User with id ${id} not found`);
+      }
+      return this.toPlainUser(user);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      console.error('Error in getItemById:', error);
+      throw new ApiError(500, 'Failed to fetch user', error);
     }
-    return user;
   }
 
-  static async createItem(data: CreationAttributes<User>) {
+  static async createItem(data: any) {
     try {
-      return await User.create(data);
-    } catch (error) {
+      console.log('\ndata:', data);
+      // Validate required fields
+      if (!data.email || !data.password_hash || !data.name) {
+        throw new ValidationError('Missing required fields', {
+          email: !data.email ? 'Email is required' : undefined,
+          password_hash: !data.password_hash ? 'Password hash is required' : undefined,
+          name: !data.name ? 'Name is required' : undefined
+        });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        throw new ValidationError('Invalid email format', {
+          email: 'Email must be a valid email address (e.g., user@example.com)'
+        });
+      }
+
+      const user = await User.create(data);
+      return this.toPlainUser(user);
+    } catch (error: any) {
+      console.error('Error in createItem:', error);
+      
+      if (error instanceof ValidationError) {
+        throw error;
+      }
       if (error instanceof UniqueConstraintError) {
         throw new ConflictError('User with this email already exists');
       }
       if (error instanceof SequelizeValidationError) {
         throw new ValidationError('Invalid user data', error.errors);
       }
-      throw new ApiError(500, 'Failed to create user', error);
+      
+      // Log the full error for debugging
+      console.error('Unexpected error in createItem:', {
+        error,
+        data,
+        stack: error?.stack
+      });
+      
+      throw new ApiError(500, 'Failed to create user', {
+        message: error?.message || 'Unknown error occurred',
+        details: error?.errors || error?.details
+      });
     }
   }
 
-  static async updateItem(id: number, data: Partial<Omit<UserAttributes, 'id' | 'created_at' | 'updated_at' | 'last_login_at'>>) {
+  static async updateItem(id: number, data: any) {
     try {
       const user = await User.findByPk(id);
       if (!user) {
         throw new NotFoundError(`User with id ${id} not found`);
       }
-      return await user.update(data);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw error;
+
+      // Validate email format if email is being updated
+      if (data.email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(data.email)) {
+          throw new ValidationError('Invalid email format', {
+            email: 'Email must be a valid email address (e.g., user@example.com)'
+          });
+        }
       }
-      if (error instanceof UniqueConstraintError) {
-        throw new ConflictError('User with this email already exists');
+
+      await user.update(data);
+      return this.toPlainUser(user);
+    } catch (error: any) {
+      console.error('Error in updateItem:', error);
+      
+      if (error instanceof NotFoundError || error instanceof ValidationError) {
+        throw error;
       }
       if (error instanceof SequelizeValidationError) {
         throw new ValidationError('Invalid user data', error.errors);
@@ -56,12 +122,21 @@ export class ExampleService {
   }
 
   static async deleteItem(id: number) {
-    const user = await User.findByPk(id);
-    if (!user) {
-      throw new NotFoundError(`User with id ${id} not found`);
+    try {
+      const user = await User.findByPk(id);
+      if (!user) {
+        throw new NotFoundError(`User with id ${id} not found`);
+      }
+      await user.destroy();
+      return { message: 'User deleted successfully' };
+    } catch (error: any) {
+      console.error('Error in deleteItem:', error);
+      
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new ApiError(500, 'Failed to delete user', error);
     }
-    await user.destroy();
-    return { success: true };
   }
 }
 

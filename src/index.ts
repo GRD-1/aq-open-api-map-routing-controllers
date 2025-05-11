@@ -2,10 +2,11 @@ import express, { Express } from 'express';
 import { Reef } from 'reef-framework';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { CustomLogger, requestLogger, errorHandler } from './logger';
+import { CustomLogger, requestLogger } from './logger';
 import { testConnection } from './database';
 import './database/models';  // Initialize models
 import dotenv from 'dotenv';
+import { errorHandler } from './middleware/error-handler.middleware';
 
 // Load environment variables
 dotenv.config();
