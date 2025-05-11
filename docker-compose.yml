@@ -3,16 +3,23 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: aq-error-library-db
+    container_name: aq-open-api-map-routing-controllers-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: aq_error_library
+      POSTGRES_DB: aq_open_api_map_routing_controllers
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - aq-open-api-map-routing-controllers-network
 
 volumes:
-  postgres_data: 
+  postgres_data:
+
+networks:
+  aq-open-api-map-routing-controllers-network:
+    name: aq-open-api-map-routing-controllers
+    driver: bridge 

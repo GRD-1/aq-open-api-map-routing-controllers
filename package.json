@@ -1,7 +1,7 @@
 {
-  "name": "aq-error-library",
+  "name": "aq-open-api-map-routing-controllers",
   "version": "1.0.0",
-  "description": "Error library built with reef-framework",
+  "description": "Open API Map Routing Controllers",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
