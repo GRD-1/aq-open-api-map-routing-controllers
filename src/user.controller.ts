@@ -13,7 +13,7 @@ import {
   OpenAPI,
   OpenApiResponseSchema
 } from './decorators/openapi.decorators';
-import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq } from './dto';
+import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq, CreateUserDtoRes } from './dto';
 import { BaseController, Controller, Get, Post, Put, Delete, Body, Param, Req, Res } from 'reef-framework';
 
 @OpenApiJsonController('/users')
@@ -75,12 +75,24 @@ export default class UsersController extends BaseController {
   @OpenApiPost('/')
   @OpenAPI({
     summary: 'Create a new user',
-    description: 'Creates a new user with the provided data'
-  })
-  @OpenApiResponseSchema(GetUsersDtoRes)
-  async createUser(@Body() userData: CreateUserDtoReq, @Req() req: Request, @Res() res: Response) {
-    console.log('\nreq.body:', req.body);
-    const user = await UserService.createItem(userData);
+    description: 'Creates a new user with the provided data',
+    responses: {
+      '400': {
+        description: 'Bad Request',
+      },
+      '403': {
+        description: 'Forbidden',
+      }
+  }})
+  @OpenApiResponseSchema(CreateUserDtoRes)
+  async createUser(
+    @Body() email: string, 
+    @Body() password_hash: string, 
+    @Body() name: string, 
+    @OpenApiBody() body: CreateUserDtoReq,
+  ) {
+
+    const user = await UserService.createItem({ email, password_hash, name });
     return {
       status: 'success',
       data: user

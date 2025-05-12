@@ -1,10 +1,244 @@
 {
   "components": {
-    "schemas": {}
+    "schemas": {
+      "CreateUserDtoReq": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "password_hash": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password_hash",
+          "name"
+        ]
+      },
+      "CreateUserDtoRes": {
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "last_login_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "password_hash": {
+            "type": "string"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "password_hash",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdateUserDtoReq": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "password_hash": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateUsersDtoRes": {
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "last_login_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "password_hash": {
+            "type": "string"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "password_hash",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "GetUsersDtoReq": {
+        "properties": {
+          "id": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ]
+      },
+      "GetUsersDtoRes": {
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "last_login_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "password_hash": {
+            "type": "string"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "password_hash",
+          "created_at",
+          "updated_at"
+        ]
+      }
+    }
   },
   "info": {
-    "title": "",
-    "version": "1.0.0"
+    "title": "AQ Open API Map Routing Controllers",
+    "version": "1.0.0",
+    "description": "API documentation for the AQ Open API Map Routing Controllers"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -34,16 +268,33 @@
       },
       "post": {
         "operationId": "UsersController.createUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDtoReq"
+              }
+            }
+          },
+          "description": "CreateUserDtoReq",
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetUsersDtoRes"
+                  "$ref": "#/components/schemas/CreateUserDtoRes"
                 }
               }
             },
             "description": ""
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
           }
         },
         "summary": "Create a new user",
