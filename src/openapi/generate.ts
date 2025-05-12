@@ -3,10 +3,10 @@ import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import * as fs from 'fs';
 import * as path from 'path';
-import UsersController from '../example.controller';
+import UsersController from '../user.controller';
 
 // Import all controllers
-import '../example.controller';
+import '../user.controller';
 
 // Generate OpenAPI spec
 const storage = getMetadataArgsStorage();

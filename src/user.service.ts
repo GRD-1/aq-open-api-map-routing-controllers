@@ -3,7 +3,7 @@ import { ApiError, ValidationError, NotFoundError, ConflictError } from './error
 import { UniqueConstraintError, ValidationError as SequelizeValidationError } from 'sequelize';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes } from './dto';
 
-export class ExampleService {
+export class UserService {
   private static toPlainUser(user: User): GetUsersDtoRes {
     const plainUser = user.get({ plain: true });
     return {
@@ -115,4 +115,4 @@ export class ExampleService {
   }
 }
 
-export default new ExampleService();
+export default UserService;

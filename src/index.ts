@@ -10,7 +10,7 @@ import swaggerUi from 'swagger-ui-express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { useExpressServer } from 'routing-controllers';
-import UsersController from './example.controller';
+import UsersController from './user.controller';
 
 // Load environment variables
 dotenv.config();
