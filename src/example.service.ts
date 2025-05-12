@@ -1,20 +1,23 @@
 import { User } from './database/models/user.model';
 import { ApiError, ValidationError, NotFoundError, ConflictError } from './errors/api.error';
 import { UniqueConstraintError, ValidationError as SequelizeValidationError } from 'sequelize';
+import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes } from './dto';
 
 export class ExampleService {
-  private static toPlainUser(user: User) {
+  private static toPlainUser(user: User): GetUsersDtoRes {
+    const plainUser = user.get({ plain: true });
     return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      last_login_at: user.last_login_at,
-      created_at: user.created_at,
-      updated_at: user.updated_at
+      id: plainUser.id,
+      email: plainUser.email,
+      name: plainUser.name,
+      last_login_at: plainUser.last_login_at,
+      password_hash: plainUser.password_hash,
+      created_at: plainUser.created_at,
+      updated_at: plainUser.updated_at
     };
   }
 
-  static async getAllItems() {
+  static async getAllItems(): Promise<GetUsersDtoRes[]> {
     try {
       const users = await User.findAll();
       return users.map(user => this.toPlainUser(user));
@@ -24,7 +27,7 @@ export class ExampleService {
     }
   }
 
-  static async getItemById(id: number) {
+  static async getItemById(id: number): Promise<GetUsersDtoRes> {
     try {
       const user = await User.findByPk(id);
       if (!user) {
@@ -40,27 +43,10 @@ export class ExampleService {
     }
   }
 
-  static async createItem(data: any) {
+  static async createItem(data: CreateUserDtoReq): Promise<GetUsersDtoRes> {
     try {
       console.log('\ndata:', data);
-      // Validate required fields
-      if (!data.email || !data.password_hash || !data.name) {
-        throw new ValidationError('Missing required fields', {
-          email: !data.email ? 'Email is required' : undefined,
-          password_hash: !data.password_hash ? 'Password hash is required' : undefined,
-          name: !data.name ? 'Name is required' : undefined
-        });
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(data.email)) {
-        throw new ValidationError('Invalid email format', {
-          email: 'Email must be a valid email address (e.g., user@example.com)'
-        });
-      }
-
-      const user = await User.create(data);
+      const user = await User.create(data as any); // Type assertion needed due to Sequelize typing limitations
       return this.toPlainUser(user);
     } catch (error: any) {
       console.error('Error in createItem:', error);
@@ -75,7 +61,6 @@ export class ExampleService {
         throw new ValidationError('Invalid user data', error.errors);
       }
       
-      // Log the full error for debugging
       console.error('Unexpected error in createItem:', {
         error,
         data,
@@ -89,24 +74,14 @@ export class ExampleService {
     }
   }
 
-  static async updateItem(id: number, data: any) {
+  static async updateItem(id: number, data: UpdateUserDtoReq): Promise<GetUsersDtoRes> {
     try {
       const user = await User.findByPk(id);
       if (!user) {
         throw new NotFoundError(`User with id ${id} not found`);
       }
 
-      // Validate email format if email is being updated
-      if (data.email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(data.email)) {
-          throw new ValidationError('Invalid email format', {
-            email: 'Email must be a valid email address (e.g., user@example.com)'
-          });
-        }
-      }
-
-      await user.update(data);
+      await user.update(data as any); // Type assertion needed due to Sequelize typing limitations
       return this.toPlainUser(user);
     } catch (error: any) {
       console.error('Error in updateItem:', error);
@@ -121,7 +96,7 @@ export class ExampleService {
     }
   }
 
-  static async deleteItem(id: number) {
+  static async deleteItem(id: number): Promise<{ message: string }> {
     try {
       const user = await User.findByPk(id);
       if (!user) {
