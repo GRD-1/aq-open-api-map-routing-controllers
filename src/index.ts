@@ -9,7 +9,9 @@ import { errorHandler } from './middleware/error-handler.middleware';
 import swaggerUi from 'swagger-ui-express';
 import * as fs from 'fs';
 import * as path from 'path';
-import { useExpressServer } from 'routing-controllers';
+import { getMetadataArgsStorage } from 'routing-controllers';
+import { routingControllersToSpec } from 'routing-controllers-openapi';
+import { Reef } from 'reef-framework';
 import UsersController from './user.controller';
 
 // Load environment variables
@@ -26,15 +28,41 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(requestLogger(logger));
 
-// Set up routing-controllers
-useExpressServer(app, {
-  controllers: [UsersController],
-  routePrefix: '/api/v1',
-  defaultErrorHandler: false
+// Initialize reef framework
+const reef = new Reef(app);
+
+// Set up controller bundle
+reef.setControllerBundle({
+  name: 'api',
+  controllerDirPath: join(__dirname),
+  baseRoute: '/api/v1/',
+  controllerFileNamePattern: /\.controller\.(ts|js)$/g,
 });
+
+// Set up logger
+reef.setLoggerFn(() => logger);
+
+// Set up trace ID
+reef.setTraceIdFn((req) => req.header('X-Trace-Id') || uuidv4());
+
+// Set up error handler
+reef.addErrorHandler(errorHandler(logger));
+
+// Launch reef framework
+reef.launch();
 
 // Add error handler
 app.use(errorHandler(logger));
+
+// Set up routing-controllers metadata for OpenAPI generation
+const storage = getMetadataArgsStorage();
+const spec = routingControllersToSpec(storage, {
+  controllers: [UsersController],
+  routePrefix: '/api/v1'
+});
+
+// Write the spec to file for the generate:openapi script
+fs.writeFileSync(path.join(__dirname, '../openapi/openapi.json'), JSON.stringify(spec, null, 2));
 
 // Serve OpenAPI documentation after routing setup
 const openapiPath = path.join(__dirname, '../openapi/openapi.json');

@@ -14,19 +14,19 @@ import {
   OpenApiResponseSchema
 } from './decorators/openapi.decorators';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq } from './dto';
-
-import { BaseController, Controller } from 'reef-framework';
+import { BaseController, Controller, Get, Post, Put, Delete, Body, Param, Req, Res } from 'reef-framework';
 
 @OpenApiJsonController('/users')
 @Controller('/users')
 export default class UsersController extends BaseController {
+  @Get('/')
   @OpenApiGet('/')
   @OpenAPI({
     summary: 'Get all users',
     description: 'Retrieves a list of all users in the system'
   })
   @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true })
-  async getAllUsers(@OpenApiReq() req: Request, @OpenApiRes() res: Response) {
+  async getAllUsers(@Req() req: Request) {
     const users = await UserService.getAllItems();
     return {
       status: 'success',
@@ -34,6 +34,7 @@ export default class UsersController extends BaseController {
     };
   }
 
+  @Get('/:id')
   @OpenApiGet('/:id')
   @OpenAPI({
     summary: 'Get user by ID',
@@ -46,7 +47,7 @@ export default class UsersController extends BaseController {
     }]
   })
   @OpenApiResponseSchema(GetUsersDtoRes)
-  async getUserById(@OpenApiRes() res: Response, @OpenApiParam('id') id: string) {
+  async getUserById(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
       res.status(404).json({
         status: 'error',
@@ -70,13 +71,14 @@ export default class UsersController extends BaseController {
     }
   }
 
+  @Post('/')
   @OpenApiPost('/')
   @OpenAPI({
     summary: 'Create a new user',
     description: 'Creates a new user with the provided data'
   })
   @OpenApiResponseSchema(GetUsersDtoRes)
-  async createUser(@OpenApiReq() req: Request, @OpenApiRes() res: Response, @OpenApiBody() userData: CreateUserDtoReq) {
+  async createUser(@Body() userData: CreateUserDtoReq, @Req() req: Request, @Res() res: Response) {
     console.log('\nreq.body:', req.body);
     const user = await UserService.createItem(userData);
     return {
@@ -85,6 +87,7 @@ export default class UsersController extends BaseController {
     };
   }
 
+  @Put('/:id')
   @OpenApiPut('/:id')
   @OpenAPI({
     summary: 'Update a user',
@@ -97,7 +100,7 @@ export default class UsersController extends BaseController {
     }]
   })
   @OpenApiResponseSchema(GetUsersDtoRes)
-  async updateUser(@OpenApiReq() req: Request, @OpenApiRes() res: Response, @OpenApiParam('id') id: string, @OpenApiBody() userData: UpdateUserDtoReq) {
+  async updateUser(@Param('id') id: string, @Body() userData: UpdateUserDtoReq, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
       res.status(404).json({
         status: 'error',
@@ -121,6 +124,7 @@ export default class UsersController extends BaseController {
     }
   }
 
+  @Delete('/:id')
   @OpenApiDelete('/:id')
   @OpenAPI({
     summary: 'Delete a user',
@@ -133,7 +137,7 @@ export default class UsersController extends BaseController {
     }]
   })
   @OpenApiResponseSchema(GetUsersDtoRes)
-  async deleteUser(@OpenApiReq() req: Request, @OpenApiRes() res: Response, @OpenApiParam('id') id: string) {
+  async deleteUser(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
       res.status(404).json({
         status: 'error',
