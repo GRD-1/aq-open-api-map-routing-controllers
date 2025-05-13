@@ -21,13 +21,5 @@ build/
 *.swo
 *~
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# Logs
-logs/
-*.log
-
-# Coverage directory
-coverage/ 
+# dinamically generated api docs
+openapi/
