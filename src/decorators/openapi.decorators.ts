@@ -27,4 +27,15 @@ export const OpenApiRes = Res;
 
 // Export routing-controllers-openapi decorators
 export { OpenAPI };
-export const OpenApiResponseSchema = ResponseSchema; 
+export const OpenApiResponseSchema = ResponseSchema;
+
+export interface OpenApiControllerDescOptions {
+  description: string;
+  tags: string[];
+}
+
+export function OpenApiControllerDesc(options: OpenApiControllerDescOptions): ClassDecorator {
+  return function (target: Function) {
+    Reflect.defineMetadata('openapi:controller:desc', options, target);
+  };
+} 

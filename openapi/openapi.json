@@ -399,5 +399,11 @@
         "description": "Deletes an existing user"
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Users",
+      "description": "Controller for managing user accounts. Provides full CRUD operations"
+    }
+  ]
 }

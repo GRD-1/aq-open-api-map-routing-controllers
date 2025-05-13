@@ -10,13 +10,18 @@ import {
   OpenApiParam,
   OpenApiReq,
   OpenApiRes,
-  OpenAPI,
-  OpenApiResponseSchema
+  OpenApiResponseSchema,
+  OpenAPI
 } from './decorators/openapi.decorators';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq, CreateUserDtoRes } from './dto';
 import { BaseController, Controller, Get, Post, Put, Delete, Body, Param, Req, Res } from 'reef-framework';
+import { OpenApiControllerDesc } from './decorators/openapi.decorators';
 
 @OpenApiJsonController('/users')
+@OpenApiControllerDesc({
+  description: 'Controller for managing user accounts. Provides full CRUD operations',
+  tags: ['Users']
+})
 @Controller('/users')
 export default class UsersController extends BaseController {
   @Get('/')

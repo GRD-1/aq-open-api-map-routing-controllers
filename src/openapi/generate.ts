@@ -26,6 +26,15 @@ const spec = routingControllersToSpec(storage, {
   }
 });
 
+// Extract controller description from metadata
+const controllerDesc = Reflect.getMetadata('openapi:controller:desc', UsersController);
+if (controllerDesc) {
+  spec.tags = [{
+    name: controllerDesc.tags[0],
+    description: controllerDesc.description
+  }];
+}
+
 // Create the openapi directory if it doesn't exist
 const openapiDir = path.join(__dirname, '../../openapi');
 if (!fs.existsSync(openapiDir)) {
