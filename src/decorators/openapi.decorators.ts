@@ -38,4 +38,15 @@ export function OpenApiControllerDesc(options: OpenApiControllerDescOptions): Cl
   return function (target: Function) {
     Reflect.defineMetadata('openapi:controller:desc', options, target);
   };
+}
+
+export interface OpenApiPropertyOptions {
+  description: string;
+  example?: any;
+}
+
+export function OpenApiProperty(options: OpenApiPropertyOptions): PropertyDecorator {
+  return function (target: any, propertyKey: string | symbol) {
+    Reflect.defineMetadata('openapi:property', options, target, propertyKey);
+  };
 } 
