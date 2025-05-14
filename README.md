@@ -40,7 +40,12 @@ cp .env.sample .env
 docker-compose up -d
 ```
 
-5. Run in development mode:
+5. Run database migrations:
+```bash
+npm run migrate:up
+```
+
+6. Run in development mode:
 ```bash
 npm run dev
 ```
