@@ -14,36 +14,41 @@ A TypeScript-based REST API project built with routing-controllers and OpenAPI/S
 ## Prerequisites
 
 - Node.js (v14 or higher)
-- PostgreSQL database
+- Docker and Docker Compose
 - npm or yarn package manager
 
-## Setup
+## Quick Start
 
-1. Install dependencies:
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/aq-open-api-map-routing-controllers.git
+cd aq-open-api-map-routing-controllers
+```
+
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Set up your environment variables in `.env`:
-```env
-PORT=3000
-DATABASE_URL=postgresql://username:password@localhost:5432/your_database
+3. Set up environment variables:
+```bash
+cp .env.sample .env
 ```
 
-3. Run in development mode:
+4. Start the database using Docker:
+```bash
+docker-compose up -d
+```
+
+5. Run in development mode:
 ```bash
 npm run dev
 ```
 
-4. Build for production:
-```bash
-npm run build
-```
+The API will be available at:
+- API endpoints: `http://localhost:3000/api/v1/`
+- Swagger documentation: `http://localhost:3000/api-docs`
 
-5. Run in production:
-```bash
-npm start
-```
 
 ## API Documentation
 
@@ -60,11 +65,9 @@ npm run generate:openapi
 
 ## API Endpoints
 
-### Users Controller
-
 - `GET /api/v1/users` - Get all users
 - `GET /api/v1/users/:id` - Get user by ID
 - `POST /api/v1/users` - Create new user
 - `PUT /api/v1/users/:id` - Update user
 - `DELETE /api/v1/users/:id` - Delete user
-
+- `GET /api-docs` - Get api map
