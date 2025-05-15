@@ -5,17 +5,18 @@ import {
   OpenApiGet,
   OpenApiPost,
   OpenApiPut,
+  OpenApiPatch,
   OpenApiDelete,
   OpenApiBody,
   OpenApiParam,
   OpenApiReq,
   OpenApiRes,
   OpenApiResponseSchema,
-  OpenAPI
-} from './decorators/openapi.decorators';
+  OpenAPI,
+  OpenApiControllerDesc
+} from './openapi/openapi.decorators';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq, CreateUserDtoRes } from './dto';
-import { BaseController, Controller, Get, Post, Put, Delete, Body, Param, Req, Res } from 'reef-framework';
-import { OpenApiControllerDesc } from './decorators/openapi.decorators';
+import { BaseController, Controller, Get, Post, Put, Patch, Delete, Body, Param, Req, Res } from 'reef-framework';
 
 @OpenApiJsonController('/users')
 @OpenApiControllerDesc({
@@ -118,6 +119,48 @@ export default class UsersController extends BaseController {
   })
   @OpenApiResponseSchema(GetUsersDtoRes)
   async updateUser(@Param('id') id: string, @Body() userData: UpdateUserDtoReq, @Req() req: Request, @Res() res: Response) {
+    if (!id.match(/^\d+$/)) {
+      res.status(404).json({
+        status: 'error',
+        message: 'Not Found'
+      });
+      return;
+    }
+
+    try {
+      const user = await UserService.updateItem(parseInt(id, 10), userData);
+      return {
+        status: 'success',
+        data: user
+      };
+    } catch (error) {
+      res.status(404).json({
+        status: 'error',
+        message: 'User not found'
+      });
+      return;
+    }
+  }
+
+  @Patch('/:id')
+  @OpenApiPatch('/:id')
+  @OpenAPI({
+    summary: 'Partially update a user',
+    description: 'Updates specific fields of an existing user',
+    parameters: [{
+      in: 'path',
+      name: 'id',
+      required: true,
+      schema: { type: 'number' }
+    }]
+  })
+  @OpenApiResponseSchema(GetUsersDtoRes)
+  async patchUser(
+    @Param('id') id: string,
+    @Body() userData: Partial<UpdateUserDtoReq>,
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
     if (!id.match(/^\d+$/)) {
       res.status(404).json({
         status: 'error',

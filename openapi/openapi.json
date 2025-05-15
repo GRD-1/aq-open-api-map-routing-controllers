@@ -423,6 +423,37 @@
         ],
         "description": "Updates an existing user with the provided data"
       },
+      "patch": {
+        "operationId": "UsersController.patchUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUsersDtoRes"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Partially update a user",
+        "tags": [
+          "Users"
+        ],
+        "description": "Updates specific fields of an existing user"
+      },
       "delete": {
         "operationId": "UsersController.deleteUser",
         "parameters": [
