@@ -9,6 +9,8 @@ export class CreateUsersBulkDtoReq {
   @Type(() => CreateUserDtoReq)
   @JSONSchema({
     description: "Array of users to create",
+    type: "array",
+    items: { $ref: "#/components/schemas/CreateUserDtoReq" },
     example: [{
       email: "user1@example.com",
       password_hash: "$2b$10$...",
@@ -34,6 +36,8 @@ export class CreateUsersBulkDtoRes {
   @Type(() => CreateUserDtoRes)
   @JSONSchema({
     description: "Array of created users",
+    type: "array",
+    items: { $ref: "#/components/schemas/CreateUserDtoRes" },
     example: [{
       id: 1,
       email: "user1@example.com",
