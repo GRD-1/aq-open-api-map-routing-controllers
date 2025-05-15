@@ -113,6 +113,36 @@ export class UserService {
       throw new ApiError(500, 'Failed to delete user', error);
     }
   }
+
+  static async createBulkItems(users: CreateUserDtoReq[]): Promise<GetUsersDtoRes[]> {
+    try {
+      const createdUsers = await User.bulkCreate(users as any[]); // Type assertion needed due to Sequelize typing limitations
+      return createdUsers.map(user => this.toPlainUser(user));
+    } catch (error: any) {
+      console.error('Error in createBulkItems:', error);
+      
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      if (error instanceof UniqueConstraintError) {
+        throw new ConflictError('One or more users with these emails already exist');
+      }
+      if (error instanceof SequelizeValidationError) {
+        throw new ValidationError('Invalid user data', error.errors);
+      }
+      
+      console.error('Unexpected error in createBulkItems:', {
+        error,
+        users,
+        stack: error?.stack
+      });
+      
+      throw new ApiError(500, 'Failed to create users', {
+        message: error?.message || 'Unknown error occurred',
+        details: error?.errors || error?.details
+      });
+    }
+  }
 }
 
 export default UserService;

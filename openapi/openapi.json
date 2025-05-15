@@ -1,300 +1,10 @@
 {
   "components": {
-    "schemas": {
-      "CreateUserDtoReq": {
-        "properties": {
-          "email": {
-            "format": "email",
-            "type": "string",
-            "description": "User email address, must be a valid email format",
-            "example": "user@example.com"
-          },
-          "password_hash": {
-            "type": "string",
-            "description": "Hashed password for user authentication",
-            "example": "$2b$10$..."
-          },
-          "name": {
-            "type": "string",
-            "description": "Full name of the user",
-            "example": "John Doe"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email",
-          "password_hash",
-          "name"
-        ]
-      },
-      "CreateUserDtoRes": {
-        "properties": {
-          "id": {
-            "type": "number",
-            "description": "Unique identifier of the user",
-            "example": 1
-          },
-          "email": {
-            "format": "email",
-            "type": "string",
-            "description": "User email address, must be a valid email format",
-            "example": "user@example.com"
-          },
-          "name": {
-            "type": "string",
-            "description": "Full name of the user",
-            "example": "John Doe"
-          },
-          "last_login_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Date and time of the last user login, can be null",
-            "example": "2024-03-15T10:30:00Z"
-          },
-          "password_hash": {
-            "type": "string",
-            "description": "Hashed password for user authentication",
-            "example": "$2b$10$..."
-          },
-          "created_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Timestamp when the user account was created",
-            "example": "2024-03-15T10:00:00Z"
-          },
-          "updated_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Timestamp when the user account was last updated",
-            "example": "2024-03-15T10:00:00Z"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "email",
-          "name",
-          "password_hash",
-          "created_at",
-          "updated_at"
-        ]
-      },
-      "UpdateUserDtoReq": {
-        "properties": {
-          "email": {
-            "format": "email",
-            "type": "string",
-            "description": "User email address to update, must be a valid email format",
-            "example": "updated@example.com"
-          },
-          "password_hash": {
-            "type": "string",
-            "description": "New hashed password for user authentication",
-            "example": "$2b$10$..."
-          },
-          "name": {
-            "type": "string",
-            "description": "New full name of the user",
-            "example": "John Updated Doe"
-          }
-        },
-        "type": "object"
-      },
-      "UpdateUsersDtoRes": {
-        "properties": {
-          "id": {
-            "type": "number",
-            "description": "Unique identifier of the updated user",
-            "example": 1
-          },
-          "email": {
-            "format": "email",
-            "type": "string",
-            "description": "Updated email address of the user",
-            "example": "updated@example.com"
-          },
-          "name": {
-            "type": "string",
-            "description": "Updated full name of the user",
-            "example": "John Updated Doe"
-          },
-          "last_login_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Date and time of the last user login, can be null",
-            "example": "2024-03-15T10:30:00Z"
-          },
-          "password_hash": {
-            "type": "string",
-            "description": "Updated hashed password for user authentication",
-            "example": "$2b$10$..."
-          },
-          "created_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Timestamp when the user account was created",
-            "example": "2024-03-15T10:00:00Z"
-          },
-          "updated_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Timestamp when the user account was last updated",
-            "example": "2024-03-15T10:30:00Z"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "email",
-          "name",
-          "password_hash",
-          "created_at",
-          "updated_at"
-        ]
-      },
-      "GetUsersDtoReq": {
-        "properties": {
-          "id": {
-            "type": "number",
-            "description": "Unique identifier of the user to retrieve",
-            "example": 1
-          }
-        },
-        "type": "object",
-        "required": [
-          "id"
-        ]
-      },
-      "GetUsersDtoRes": {
-        "properties": {
-          "id": {
-            "type": "number",
-            "description": "Unique identifier of the user",
-            "example": 1
-          },
-          "email": {
-            "format": "email",
-            "type": "string",
-            "description": "Email address of the user",
-            "example": "user@example.com"
-          },
-          "name": {
-            "type": "string",
-            "description": "Full name of the user",
-            "example": "John Doe"
-          },
-          "last_login_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Date and time of the last user login, can be null",
-            "example": "2024-03-15T10:30:00Z"
-          },
-          "password_hash": {
-            "type": "string",
-            "description": "Hashed password for user authentication",
-            "example": "$2b$10$..."
-          },
-          "created_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Timestamp when the user account was created",
-            "example": "2024-03-15T10:00:00Z"
-          },
-          "updated_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Timestamp when the user account was last updated",
-            "example": "2024-03-15T10:00:00Z"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "email",
-          "name",
-          "password_hash",
-          "created_at",
-          "updated_at"
-        ]
-      }
-    }
+    "schemas": {}
   },
   "info": {
-    "title": "AQ Open API Map Routing Controllers",
-    "version": "1.0.0",
-    "description": "API documentation for the AQ Open API Map Routing Controllers"
+    "title": "",
+    "version": "1.0.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -485,12 +195,48 @@
         ],
         "description": "Deletes an existing user"
       }
+    },
+    "/api/v1/users/bulk": {
+      "post": {
+        "operationId": "UsersController.createUsers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUsersBulkDtoReq"
+              }
+            }
+          },
+          "description": "CreateUsersBulkDtoReq",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUsersBulkDtoRes"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict - One or more users with these emails already exist"
+          }
+        },
+        "summary": "Create multiple users",
+        "tags": [
+          "Users"
+        ],
+        "description": "Creates multiple users in a single request"
+      }
     }
-  },
-  "tags": [
-    {
-      "name": "Users",
-      "description": "Controller for managing user accounts. Provides full CRUD operations"
-    }
-  ]
+  }
 }

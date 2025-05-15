@@ -16,7 +16,9 @@ import {
 } from './openapi/decorators';
 import { OpenApiControllerDesc } from './openapi/decorators';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq, CreateUserDtoRes } from './dto';
+import { CreateUsersBulkDtoReq, CreateUsersBulkDtoRes } from './dto/create-users.dto';
 import { BaseController, Controller, Get, Post, Put, Patch, Delete, Body, Param, Req, Res } from 'reef-framework';
+import { ConflictError, ValidationError, ApiError } from './errors/api.error';
 
 @OpenApiJsonController('/users')
 @OpenApiControllerDesc({
@@ -89,7 +91,8 @@ export default class UsersController extends BaseController {
       '403': {
         description: 'Forbidden',
       }
-  }})
+    }
+  })
   @OpenApiResponseSchema(CreateUserDtoRes)
   async createUser(
     @Body() email: string, 
@@ -102,6 +105,35 @@ export default class UsersController extends BaseController {
     return {
       status: 'success',
       data: user
+    };
+  }
+
+  @Post('/bulk')
+  @OpenApiPost('/bulk')
+  @OpenAPI({
+    summary: 'Create multiple users',
+    description: 'Creates multiple users in a single request',
+    responses: {
+      '400': {
+        description: 'Bad Request - Invalid input data',
+      },
+      '403': {
+        description: 'Forbidden',
+      },
+      '409': {
+        description: 'Conflict - One or more users with these emails already exist',
+      }
+    }
+  })
+  @OpenApiResponseSchema(CreateUsersBulkDtoRes)
+  async createUsers(
+    @Body() users: CreateUsersBulkDtoReq["users"],
+    @OpenApiBody() body: CreateUsersBulkDtoReq,
+  ) {
+    const createdUsers = await UserService.createBulkItems(users);
+    return {
+      status: 'success',
+      data: createdUsers
     };
   }
 
