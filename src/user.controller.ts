@@ -13,8 +13,8 @@ import {
   OpenApiRes,
   OpenApiResponseSchema,
   OpenAPI,
-  OpenApiControllerDesc
-} from './openapi/openapi.decorators';
+} from './openapi/decorators';
+import { OpenApiControllerDesc } from './openapi/decorators';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq, CreateUserDtoRes } from './dto';
 import { BaseController, Controller, Get, Post, Put, Patch, Delete, Body, Param, Req, Res } from 'reef-framework';
 

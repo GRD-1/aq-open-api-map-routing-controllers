@@ -74,5 +74,6 @@ npm run generate:openapi
 - `GET /api/v1/users/:id` - Get user by ID
 - `POST /api/v1/users` - Create new user
 - `PUT /api/v1/users/:id` - Update user
+- `PATCH /api/v1/users/:id` - Update user
 - `DELETE /api/v1/users/:id` - Delete user
 - `GET /api-docs` - Get api map
