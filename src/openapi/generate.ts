@@ -2,69 +2,104 @@ import 'reflect-metadata';
 import { getMetadataArgsStorage } from 'routing-controllers';
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import UsersController from '../user.controller';
+import OpenAPIController from './openapi.controller';
 
 // Import all controllers
 import '../user.controller';
 
-try {
-  // Generate OpenAPI spec
+interface OpenAPISpec {
+  tags: Array<{ name: string; description: string }>;
+  paths: {
+    [path: string]: {
+      [method: string]: {
+        operationId?: string;
+        tags?: string[];
+        [key: string]: any;
+      };
+    };
+  };
+  [key: string]: any;
+}
+
+export function generateOpenAPISpec() {
+  // Get metadata from routing-controllers
   const storage = getMetadataArgsStorage();
   const schemas = validationMetadatasToSchemas();
 
-  const spec = routingControllersToSpec(storage, {
-    controllers: [UsersController],
-    routePrefix: '/api/v1'
-  }, {
-    components: {
-      schemas
+  // Generate OpenAPI spec
+  const spec = routingControllersToSpec(
+    storage,
+    { 
+      controllers: [UsersController],
+      routePrefix: '/api/v1'  // Add the route prefix to match our API versioning
     },
-    info: {
-      title: 'AQ Open API Map Routing Controllers',
-      version: '1.0.0',
-      description: 'API documentation for the AQ Open API Map Routing Controllers',
+    {
+      components: { schemas },
+      info: {
+        title: 'AQ Open API Map Routing Controllers',
+        version: '1.0.0',
+        description: 'API documentation for the AQ Open API Map Routing Controllers',
+      },
+      tags: [] // Initialize tags array
+    },
+  ) as OpenAPISpec;
+
+  // Add controller metadata to tags
+  const controllers = [UsersController];
+  controllers.forEach(controller => {
+    const metadata = Reflect.getMetadata('openapi:controller:desc', controller);
+    if (metadata) {
+      // Get the base path from the controller's metadata
+      const basePath = Reflect.getMetadata('path', controller) || '';
+      // Get controller name without 'Controller' suffix and format it
+      const controllerName = controller.name.replace('Controller', '').split(/(?=[A-Z])/).join(' ');
+      // Use tags if provided, otherwise use formatted controller name
+      const tagName = metadata.tags?.[0] || controllerName;
+      
+      console.log(`Defined controller metadata for ${controller.name}:`, metadata);
+      
+      // Find existing tag or create new one
+      let tag = spec.tags.find(t => t.name === tagName);
+      if (!tag) {
+        tag = { name: tagName, description: metadata.description };
+        spec.tags.push(tag);
+      } else {
+        tag.description = metadata.description;
+      }
+
+      // Update operation tags if they don't match
+      Object.entries(spec.paths).forEach(([path, pathItem]) => {
+        Object.entries(pathItem).forEach(([method, operation]) => {
+          if (operation.operationId?.startsWith(controller.name + '.')) {
+            operation.tags = [tagName];
+          }
+        });
+      });
     }
   });
 
-  // Extract controller description from metadata
-  const controllerDesc = Reflect.getMetadata('openapi:controller:desc', UsersController);
-  if (!controllerDesc) {
-    console.warn('Warning: No controller description metadata found for UsersController');
-  }
+  return spec;
+}
 
-  // Initialize tags array if not present
-  spec.tags = spec.tags || [];
-
-  // Add or update controller description in tags
-  if (controllerDesc && controllerDesc.tags && controllerDesc.tags.length > 0) {
-    const tag = controllerDesc.tags[0];
-    const existingTagIndex = spec.tags.findIndex(t => t.name === tag);
-    
-    if (existingTagIndex >= 0) {
-      spec.tags[existingTagIndex].description = controllerDesc.description;
-    } else {
-      spec.tags.push({
-        name: tag,
-        description: controllerDesc.description
-      });
-    }
-  }
-
-  // Create the openapi directory if it doesn't exist
-  const openapiDir = path.join(__dirname, '../../openapi');
+export function writeOpenAPISpec(spec: OpenAPISpec) {
+  // Ensure openapi directory exists
+  const openapiDir = path.join(process.cwd(), 'openapi');
   if (!fs.existsSync(openapiDir)) {
-    fs.mkdirSync(openapiDir, { recursive: true });
+    fs.mkdirSync(openapiDir);
   }
 
-  // Write the spec to a file
-  const outputPath = path.join(openapiDir, 'openapi.json');
-  fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
-
+  // Write spec to file
+  const filePath = path.join(openapiDir, 'openapi.json');
+  fs.writeFileSync(filePath, JSON.stringify(spec, null, 2));
   console.log('OpenAPI specification has been generated successfully!');
-  console.log(`File written to: ${outputPath}`);
-} catch (error) {
-  console.error('Error generating OpenAPI specification:', error);
-  process.exit(1);
+  console.log('File written to:', filePath);
+}
+
+// Only run if this file is being executed directly
+if (require.main === module) {
+  const spec = generateOpenAPISpec();
+  writeOpenAPISpec(spec);
 } 

@@ -34,7 +34,7 @@ export const OpenApiResponseSchema = ResponseSchema;
 
 export interface OpenApiControllerDescOptions {
   description: string;
-  tags: string[];
+  tags?: string[];
 }
 
 export function OpenApiControllerDesc(options: OpenApiControllerDescOptions): ClassDecorator {
