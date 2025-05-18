@@ -15,10 +15,8 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
   - [Parameter Decorators](#parameter-decorators)
   - [Response Schema Decorator](#response-schema-decorator)
 - [Usage Example](#usage-example)
-- [Generate OpenAPI Map](#generate-openapi-map)
+- [Working with Documentation](#working-with-documentation)
 - [References](#references)
-
-
 
 ### Controller Decorators
 ```typescript
@@ -75,30 +73,18 @@ export class UsersController {
 }
 ```
 
-## Generate OpenAPI Map
+## Working with Documentation
 
-The OpenAPI map is generated from your controllers and DTOs using the decorators described above. Here's how to generate and use the map:
 
-1. **Generation Methods**:
-   - **API Endpoint**: Make a POST request to `/api/v1/openapi/generate` (fastest)
-   - **CLI Command**: Run `npm run generate:openapi` (slower but useful for CI/CD)
+1. **Swagger UI**: `/api/v1/openapi/ui`
+   - Visual representation of your API structure
 
-2. **Specification Location**: The generated OpenAPI specification is saved to:
-   ```
-   ./openapi/openapi.json
-   ```
+2. **Raw JSON Spec**: `/api/v1/openapi/json`
+   - Raw OpenAPI specification in JSON format
 
-3. **Viewing the Documentation**:
-   - Access the Swagger UI at `/api-docs`
-   - The UI loads the latest generated specification
-   - All endpoints are grouped by their controller tags
-   - Each endpoint shows its parameters, request/response schemas, and examples
+3. **Generate Spec**: `POST /api/v1/openapi/generate`
+   - Generates a new OpenAPI specification
 
-4. **When to Generate**:
-   - After adding new controllers or modifying existing ones
-   - After changing DTO schemas or validation rules
-   - When updating API documentation or descriptions
-   - Before deploying new API versions
 
 ## References
 

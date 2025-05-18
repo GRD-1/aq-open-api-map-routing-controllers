@@ -6,11 +6,12 @@ import { testConnection } from './database';
 import './database/models';  // Initialize models
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/error-handler.middleware';
-import swaggerUi from 'swagger-ui-express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Reef } from 'reef-framework';
 import UsersController from './user.controller';
+import OpenAPIController from './openapi/openapi.controller';
+import swaggerUi from 'swagger-ui-express';
 
 // Load environment variables
 dotenv.config();
@@ -42,6 +43,13 @@ app.use(requestLogger(logger));
 // Parse JSON bodies
 app.use(express.json());
 
+// Setup Swagger UI
+const openapiPath = path.join(process.cwd(), 'openapi/openapi.json');
+if (fs.existsSync(openapiPath)) {
+  const openapiSpec = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
+  app.use('/api/v1/openapi/ui', swaggerUi.serve, swaggerUi.setup(openapiSpec));
+}
+
 // Initialize Reef framework
 const reef = new Reef(app);
 
@@ -65,35 +73,6 @@ reef.addErrorHandler(errorHandler);
 // Launch reef framework
 reef.launch();
 
-// Serve OpenAPI documentation
-const openapiPath = path.join(__dirname, '../openapi/openapi.json');
-if (fs.existsSync(openapiPath)) {
-  // Serve the OpenAPI spec at /api-docs/openapi.json
-  app.get('/api-docs/openapi.json', (req, res) => {
-    try {
-      const openapiSpec = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
-      res.json(openapiSpec);
-    } catch (error) {
-      logger.error('Failed to read OpenAPI spec:', error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Failed to read OpenAPI specification'
-      });
-    }
-  });
-
-  // Serve Swagger UI
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(null, {
-    swaggerOptions: {
-      url: '/api-docs/openapi.json'
-    }
-  }));
-  
-  logger.info('OpenAPI documentation is available at /api-docs');
-} else {
-  logger.warn('OpenAPI specification file not found. Run npm run generate:openapi to generate it.');
-}
-
 // Launch the application
 const PORT = process.env.PORT || 3000;
 
@@ -106,6 +85,7 @@ const start = async () => {
     // Start the server
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
+      logger.info('OpenAPI documentation is available at /api/v1/openapi/ui');
     });
   } catch (error) {
     logger.error('Failed to start the application:', error);

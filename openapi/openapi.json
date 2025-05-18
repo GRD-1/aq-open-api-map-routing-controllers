@@ -592,7 +592,7 @@
   "tags": [
     {
       "name": "Users",
-      "description": "Controller for managing user accounts. Provides full CRUD operations RAVOLY"
+      "description": "Controller for managing user accounts. Provides full CRUD operations"
     }
   ]
 }
