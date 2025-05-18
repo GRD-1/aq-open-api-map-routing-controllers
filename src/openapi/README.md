@@ -14,7 +14,7 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
   - [Method Decorators](#method-decorators)
   - [Parameter Decorators](#parameter-decorators)
   - [Response Schema Decorator](#response-schema-decorator)
-- [Usage Example](#usage-example)
+  - [Usage Example](#usage-example)
 - [Working with Documentation](#working-with-documentation)
 - [References](#references)
 
@@ -49,7 +49,7 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
 @OpenApiResponseSchema(UserResponseDto)
 ```
 
-## Usage Example
+### Usage Example
 
 ```typescript
 @OpenApiJsonController('/users')
@@ -57,6 +57,7 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
   description: "Controller for managing user accounts",
   tags: ["Users"]
 })
+@Controller('/users')
 export class UsersController {
   @OpenApiPatch('/:id')
   @OpenAPI({
@@ -73,18 +74,31 @@ export class UsersController {
 }
 ```
 
-## Working with Documentation
+### Working with Documentation
 
+The OpenAPI documentation is automatically generated from your controllers and DTOs using the decorators described above.
 
-1. **Swagger UI**: `/api/v1/openapi/ui`
-   - Visual representation of your API structure
+To see the map in browser:
+```
+http://localhost:3000/api/v1/openapi/ui
+```
 
-2. **Raw JSON Spec**: `/api/v1/openapi/json`
-   - Raw OpenAPI specification in JSON format
+To get the map in JSON format:
+```
+http://localhost:3000/api/v1/openapi/json
+```
 
-3. **Generate Spec**: `POST /api/v1/openapi/generate`
-   - Generates a new OpenAPI specification
+To generate map:
+```bash
+curl -X POST http://localhost:3000/api/v1/openapi/generate
+```
 
+To generate map using CLI:
+```bash
+npm run generate:openapi
+```
+
+The generated specification will be saved to `openapi/openapi.json` in both cases.
 
 ## References
 
