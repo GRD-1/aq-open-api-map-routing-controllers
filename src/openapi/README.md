@@ -77,21 +77,28 @@ export class UsersController {
 
 ## Generate OpenAPI Map
 
-4. **Generation Methods**:
-   - **Automatic**: The OpenAPI map is automatically generated when the server starts
-   - **Manual**: You can generate a new map by making a POST request to `/api/v1/openapi/generate`
-   - **CLI**: Run `npm run generate:openapi` to generate the map from command line (the slowest way)
+The OpenAPI map is generated from your controllers and DTOs using the decorators described above. Here's how to generate and use the map:
 
-5. **Specification Location**: The generated OpenAPI specification is saved to:
+1. **Generation Methods**:
+   - **API Endpoint**: Make a POST request to `/api/v1/openapi/generate` (fastest)
+   - **CLI Command**: Run `npm run generate:openapi` (slower but useful for CI/CD)
+
+2. **Specification Location**: The generated OpenAPI specification is saved to:
    ```
    ./openapi/openapi.json
    ```
 
-6. **Viewing the Documentation**:
+3. **Viewing the Documentation**:
    - Access the Swagger UI at `/api-docs`
-   - The UI automatically loads the latest specification
+   - The UI loads the latest generated specification
    - All endpoints are grouped by their controller tags
    - Each endpoint shows its parameters, request/response schemas, and examples
+
+4. **When to Generate**:
+   - After adding new controllers or modifying existing ones
+   - After changing DTO schemas or validation rules
+   - When updating API documentation or descriptions
+   - Before deploying new API versions
 
 ## References
 

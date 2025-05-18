@@ -1,4 +1,4 @@
-import express, { Express } from 'express';
+import express, { Express, Request } from 'express';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { CustomLogger, requestLogger } from './logger';
@@ -9,26 +9,40 @@ import { errorHandler } from './middleware/error-handler.middleware';
 import swaggerUi from 'swagger-ui-express';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getMetadataArgsStorage } from 'routing-controllers';
-import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { Reef } from 'reef-framework';
 import UsersController from './user.controller';
 
 // Load environment variables
 dotenv.config();
 
-// Initialize express app
-const app: Express = express();
-
-// Create logger instance
+// Initialize logger
 const logger = new CustomLogger();
 
-// Add basic express middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Create Express application
+const app: Express = express();
+
+// Extend Request type to include id
+declare global {
+  namespace Express {
+    interface Request {
+      id: string;
+    }
+  }
+}
+
+// Add request ID middleware
+app.use((req, res, next) => {
+  req.id = uuidv4();
+  next();
+});
+
+// Add request logging middleware
 app.use(requestLogger(logger));
 
-// Initialize reef framework
+// Parse JSON bodies
+app.use(express.json());
+
+// Initialize Reef framework
 const reef = new Reef(app);
 
 // Set up controller bundle
@@ -46,44 +60,25 @@ reef.setLoggerFn(() => logger);
 reef.setTraceIdFn((req) => req.header('X-Trace-Id') || uuidv4());
 
 // Set up error handler
-reef.addErrorHandler(errorHandler(logger));
+reef.addErrorHandler(errorHandler);
 
 // Launch reef framework
 reef.launch();
 
-// Add error handler
-app.use(errorHandler(logger));
-
-// Set up routing-controllers metadata for OpenAPI generation
-const storage = getMetadataArgsStorage();
-const spec = routingControllersToSpec(storage, {
-  controllers: [UsersController],
-  routePrefix: '/api/v1'
-});
-
-// Write the spec to file for the generate:openapi script
-fs.writeFileSync(path.join(__dirname, '../openapi/openapi.json'), JSON.stringify(spec, null, 2));
-
-// Serve OpenAPI documentation after routing setup
+// Serve OpenAPI documentation
 const openapiPath = path.join(__dirname, '../openapi/openapi.json');
 if (fs.existsSync(openapiPath)) {
   // Serve the OpenAPI spec at /api-docs/openapi.json
-  app.get('/api-docs/openapi.json', async (req, res) => {
+  app.get('/api-docs/openapi.json', (req, res) => {
     try {
-      // Regenerate OpenAPI spec
-      await new Promise((resolve, reject) => {
-        const child = require('child_process').exec('npm run generate:openapi');
-        child.on('close', (code: number) => code === 0 ? resolve(null) : reject(new Error(`Exit code: ${code}`)));
-      });
-      
-      // Read and serve the fresh spec
       const openapiSpec = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
       res.json(openapiSpec);
     } catch (error) {
-      logger.error('Failed to regenerate OpenAPI spec:', error);
-      // Fallback to existing spec if regeneration fails
-      const openapiSpec = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
-      res.json(openapiSpec);
+      logger.error('Failed to read OpenAPI spec:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to read OpenAPI specification'
+      });
     }
   });
 

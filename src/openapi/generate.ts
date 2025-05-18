@@ -5,10 +5,6 @@ import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import fs from 'fs';
 import path from 'path';
 import UsersController from '../user.controller';
-import OpenAPIController from './openapi.controller';
-
-// Import all controllers
-import '../user.controller';
 
 interface OpenAPISpec {
   tags: Array<{ name: string; description: string }>;
@@ -33,7 +29,7 @@ export function generateOpenAPISpec() {
   const spec = routingControllersToSpec(
     storage,
     { 
-      controllers: [UsersController],
+      controllers: [UsersController], // Only include UsersController
       routePrefix: '/api/v1'  // Add the route prefix to match our API versioning
     },
     {
@@ -48,7 +44,7 @@ export function generateOpenAPISpec() {
   ) as OpenAPISpec;
 
   // Add controller metadata to tags
-  const controllers = [UsersController];
+  const controllers = [UsersController]; // Only include UsersController
   controllers.forEach(controller => {
     const metadata = Reflect.getMetadata('openapi:controller:desc', controller);
     if (metadata) {
@@ -61,7 +57,7 @@ export function generateOpenAPISpec() {
       
       console.log(`Defined controller metadata for ${controller.name}:`, metadata);
       
-      // Find existing tag or create new one
+      // Find existing tag or create one
       let tag = spec.tags.find(t => t.name === tagName);
       if (!tag) {
         tag = { name: tagName, description: metadata.description };
