@@ -1,8 +1,9 @@
-import { User } from './database/models/user.model';
+import { User } from '../database/models/user.model';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes } from './dto';
-import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedError } from './errors/api.error';
+import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedError } from '../errors/api.error';
 import { v4 as uuidv4 } from 'uuid';
 import { Optional } from 'sequelize';
+import { CreateUsersBulkDtoReq } from './dto/create-users.dto';
 
 export default class UserService {
   static async getAllItems(): Promise<GetUsersDtoRes[]> {

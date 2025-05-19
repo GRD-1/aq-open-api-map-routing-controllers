@@ -4,7 +4,7 @@ import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import fs from 'fs';
 import path from 'path';
-import UsersController from '../user.controller';
+import UsersController from '../users/user.controller';
 
 interface OpenAPISpec {
   tags: Array<{ name: string; description: string }>;

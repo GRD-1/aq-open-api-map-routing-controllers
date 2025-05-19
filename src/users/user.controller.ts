@@ -14,18 +14,22 @@ import {
   OpenApiResponseSchema,
   OpenAPI,
   OpenApiAuth
-} from './openapi/decorators';
-import { OpenApiControllerDesc } from './openapi/decorators';
+} from '../openapi/decorators';
+import { OpenApiControllerDesc } from '../openapi/decorators';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq, CreateUserDtoRes } from './dto';
 import { CreateUsersBulkDtoReq, CreateUsersBulkDtoRes } from './dto/create-users.dto';
 import { LoginRequestDto, LoginResponseDto } from './dto/login.dto';
 import { BaseController, Controller, Get, Post, Put, Patch, Delete, Body, Param, Req, Res } from 'reef-framework';
-import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedError } from './errors/api.error';
-import { Auth } from './decorators/auth.decorator';
+import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedError } from '../errors/api.error';
+import { Auth } from '../decorators/auth.decorator';
+import { JsonController, OnUndefined, HttpCode } from 'routing-controllers';
+import { OpenAPI as RoutingOpenAPI, ResponseSchema } from 'routing-controllers-openapi';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+import { User } from '../database/models/user.model';
 
 @OpenApiJsonController('/users')
 @OpenApiControllerDesc({
-  description: 'Controller for managing user accounts. Provides full CRUD operations RAVOLY',
+  description: 'Controller for managing user accounts. Provides full CRUD operations',
   tags: ['Users']
 })
 @Controller('/users')
