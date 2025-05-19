@@ -711,7 +711,7 @@
   "tags": [
     {
       "name": "Users",
-      "description": "Controller for managing user accounts. Provides full CRUD operations LATEPIA"
+      "description": "Controller for managing user accounts. Provides full CRUD operations RAVOLY"
     }
   ]
 }

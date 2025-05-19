@@ -7,13 +7,11 @@ import * as path from 'path';
 export default class OpenAPIController extends BaseController {
   @Get('/json')
   async getOpenAPIJson(): Promise<any> {
-    const openapiPath = path.join(process.cwd(), 'openapi/openapi.json');
-    try {
-      return JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
-    } catch (error) {
-      console.error('Failed to read OpenAPI spec:', error);
-      throw new Error('Failed to read OpenAPI specification');
-    }
+    // Generate new spec
+    const spec = generateOpenAPISpec();
+    // Write to file
+    writeOpenAPISpec(spec);
+    return spec;
   }
 
   @Post('/generate')
