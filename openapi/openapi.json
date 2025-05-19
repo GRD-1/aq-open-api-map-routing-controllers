@@ -394,6 +394,14 @@
           "expires_in"
         ]
       }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your JWT token in the format: Bearer <token>"
+      }
     }
   },
   "info": {
@@ -425,7 +433,12 @@
         "tags": [
           "Users"
         ],
-        "description": "Retrieves a list of all users in the system"
+        "description": "Retrieves a list of all users in the system",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
         "operationId": "UsersController.createUser",
@@ -462,7 +475,12 @@
         "tags": [
           "Users"
         ],
-        "description": "Creates a new user with the provided data"
+        "description": "Creates a new user with the provided data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/users/{id}": {
@@ -495,7 +513,12 @@
         "tags": [
           "Users"
         ],
-        "description": "Retrieves a specific user by their ID"
+        "description": "Retrieves a specific user by their ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "put": {
         "operationId": "UsersController.updateUser",
@@ -526,7 +549,12 @@
         "tags": [
           "Users"
         ],
-        "description": "Updates an existing user with the provided data"
+        "description": "Updates an existing user with the provided data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "patch": {
         "operationId": "UsersController.patchUser",
@@ -557,7 +585,12 @@
         "tags": [
           "Users"
         ],
-        "description": "Updates specific fields of an existing user"
+        "description": "Updates specific fields of an existing user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "delete": {
         "operationId": "UsersController.deleteUser",
@@ -588,7 +621,12 @@
         "tags": [
           "Users"
         ],
-        "description": "Deletes an existing user"
+        "description": "Deletes an existing user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/users/bulk": {
@@ -630,7 +668,12 @@
         "tags": [
           "Users"
         ],
-        "description": "Creates multiple users in a single request"
+        "description": "Creates multiple users in a single request",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/users/login": {

@@ -13,6 +13,7 @@ import {
   OpenApiRes,
   OpenApiResponseSchema,
   OpenAPI,
+  OpenApiAuth
 } from './openapi/decorators';
 import { OpenApiControllerDesc } from './openapi/decorators';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq, CreateUserDtoRes } from './dto';
@@ -36,6 +37,7 @@ export default class UsersController extends BaseController {
     summary: 'Get all users',
     description: 'Retrieves a list of all users in the system'
   })
+  @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true })
   async getAllUsers(@Req() req: Request, @Res() res: Response) {
     const users = await UserService.getAllItems();
@@ -58,6 +60,7 @@ export default class UsersController extends BaseController {
       schema: { type: 'number' }
     }]
   })
+  @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes)
   async getUserById(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
@@ -98,6 +101,7 @@ export default class UsersController extends BaseController {
       }
     }
   })
+  @OpenApiAuth()
   @OpenApiResponseSchema(CreateUserDtoRes)
   async createUser(
     @Req() req: Request,
@@ -132,6 +136,7 @@ export default class UsersController extends BaseController {
       }
     }
   })
+  @OpenApiAuth()
   @OpenApiResponseSchema(CreateUsersBulkDtoRes)
   async createUsers(
     @Req() req: Request,
@@ -159,6 +164,7 @@ export default class UsersController extends BaseController {
       schema: { type: 'number' }
     }]
   })
+  @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes)
   async updateUser(@Param('id') id: string, @Body() userData: UpdateUserDtoReq, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
@@ -197,6 +203,7 @@ export default class UsersController extends BaseController {
       schema: { type: 'number' }
     }]
   })
+  @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes)
   async patchUser(
     @Param('id') id: string,
@@ -234,6 +241,7 @@ export default class UsersController extends BaseController {
     summary: 'Delete a user',
     description: 'Deletes an existing user',
   })
+  @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes)
   async deleteUser(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {

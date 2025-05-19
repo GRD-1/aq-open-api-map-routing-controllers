@@ -57,4 +57,32 @@ export function OpenApiProperty(options: OpenApiPropertyOptions): PropertyDecora
   return function (target: any, propertyKey: string | symbol) {
     Reflect.defineMetadata('openapi:property', options, target, propertyKey);
   };
+}
+
+export function OpenApiAuth() {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const openApi = Reflect.getMetadata('openapi', target, propertyKey) || {};
+    
+    // Add security requirement to the operation
+    openApi.security = [{
+      bearerAuth: [] // This matches the security scheme defined in your OpenAPI spec
+    }];
+
+    // Add security scheme to components if not already present
+    if (!openApi.components) {
+      openApi.components = {};
+    }
+    if (!openApi.components.securitySchemes) {
+      openApi.components.securitySchemes = {};
+    }
+    openApi.components.securitySchemes.bearerAuth = {
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      description: 'Enter your JWT token in the format: Bearer <token>'
+    };
+
+    Reflect.defineMetadata('openapi', openApi, target, propertyKey);
+    return descriptor;
+  };
 } 

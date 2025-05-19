@@ -13,9 +13,21 @@ interface OpenAPISpec {
       [method: string]: {
         operationId?: string;
         tags?: string[];
+        security?: Array<{ [key: string]: string[] }>;
         [key: string]: any;
       };
     };
+  };
+  components?: {
+    securitySchemes?: {
+      [key: string]: {
+        type: string;
+        scheme: string;
+        bearerFormat?: string;
+        description?: string;
+      };
+    };
+    [key: string]: any;
   };
   [key: string]: any;
 }
@@ -23,7 +35,7 @@ interface OpenAPISpec {
 export function generateOpenAPISpec() {
   // Get metadata from routing-controllers
   const storage = getMetadataArgsStorage();
-  const schemas = validationMetadatasToSchemas();
+  const schemas = validationMetadatasToSchemas() as any; // Type assertion to avoid schema type mismatch
 
   // Generate OpenAPI spec
   const spec = routingControllersToSpec(
@@ -33,7 +45,17 @@ export function generateOpenAPISpec() {
       routePrefix: '/api/v1'  // Add the route prefix to match our API versioning
     },
     {
-      components: { schemas },
+      components: { 
+        schemas,
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            description: 'Enter your JWT token in the format: Bearer <token>'
+          }
+        }
+      },
       info: {
         title: 'AQ Open API Map Routing Controllers',
         version: '1.0.0',
@@ -66,11 +88,16 @@ export function generateOpenAPISpec() {
         tag.description = metadata.description;
       }
 
-      // Update operation tags if they don't match
+      // Update operation tags and add security requirements
       Object.entries(spec.paths).forEach(([path, pathItem]) => {
         Object.entries(pathItem).forEach(([method, operation]) => {
           if (operation.operationId?.startsWith(controller.name + '.')) {
             operation.tags = [tagName];
+            
+            // Add security requirement for all methods except login
+            if (operation.operationId !== 'UsersController.login') {
+              operation.security = [{ bearerAuth: [] }];
+            }
           }
         });
       });
