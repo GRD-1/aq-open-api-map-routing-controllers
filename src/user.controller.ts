@@ -25,7 +25,7 @@ import { Auth } from './decorators/auth.decorator';
 
 @OpenApiJsonController('/users')
 @OpenApiControllerDesc({
-  description: 'Controller for managing user accounts. Provides full CRUD operations',
+  description: 'Controller for managing user accounts. Provides full CRUD operations LATEPIA',
   tags: ['Users']
 })
 @Controller('/users')

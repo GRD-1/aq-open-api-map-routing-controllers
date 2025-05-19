@@ -45,11 +45,12 @@ app.use(requestLogger(logger));
 app.use(express.json());
 
 // Setup Swagger UI
-const openapiPath = path.join(process.cwd(), 'openapi/openapi.json');
-if (fs.existsSync(openapiPath)) {
-  const openapiSpec = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
-  app.use('/api/v1/openapi/ui', swaggerUi.serve, swaggerUi.setup(openapiSpec));
-}
+app.use('/api/v1/openapi/ui', swaggerUi.serve, swaggerUi.setup(null, {
+  swaggerOptions: {
+    url: '/api/v1/openapi/json',
+    persistAuthorization: true
+  }
+}));
 
 // Initialize Reef framework
 const reef = new Reef(app);

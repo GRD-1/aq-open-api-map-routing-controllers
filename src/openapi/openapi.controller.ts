@@ -9,8 +9,7 @@ export default class OpenAPIController extends BaseController {
   async getOpenAPIJson(): Promise<any> {
     const openapiPath = path.join(process.cwd(), 'openapi/openapi.json');
     try {
-      const openapiSpec = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
-      return openapiSpec;
+      return JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
     } catch (error) {
       console.error('Failed to read OpenAPI spec:', error);
       throw new Error('Failed to read OpenAPI specification');
