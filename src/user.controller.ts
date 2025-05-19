@@ -30,14 +30,14 @@ import { Auth } from './decorators/auth.decorator';
 @Controller('/users')
 export default class UsersController extends BaseController {
   @Get('/')
-  // @Auth()
+  @Auth()
   @OpenApiGet('/')
   @OpenAPI({
     summary: 'Get all users',
     description: 'Retrieves a list of all users in the system'
   })
   @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true })
-  async getAllUsers(@Req() req: Request) {
+  async getAllUsers(@Req() req: Request, @Res() res: Response) {
     const users = await UserService.getAllItems();
     return {
       status: 'success',
@@ -46,7 +46,7 @@ export default class UsersController extends BaseController {
   }
 
   @Get('/:id')
-  // @Auth()
+  @Auth()
   @OpenApiGet('/:id')
   @OpenAPI({
     summary: 'Get user by ID',
@@ -84,7 +84,7 @@ export default class UsersController extends BaseController {
   }
 
   @Post('/')
-  // @Auth()
+  @Auth()
   @OpenApiPost('/')
   @OpenAPI({
     summary: 'Create a new user',
@@ -100,6 +100,8 @@ export default class UsersController extends BaseController {
   })
   @OpenApiResponseSchema(CreateUserDtoRes)
   async createUser(
+    @Req() req: Request,
+    @Res() res: Response,
     @Body() email: string, 
     @Body() password_hash: string, 
     @Body() name: string, 
@@ -113,7 +115,7 @@ export default class UsersController extends BaseController {
   }
 
   @Post('/bulk')
-  // @Auth()
+  @Auth()
   @OpenApiPost('/bulk')
   @OpenAPI({
     summary: 'Create multiple users',
@@ -132,6 +134,8 @@ export default class UsersController extends BaseController {
   })
   @OpenApiResponseSchema(CreateUsersBulkDtoRes)
   async createUsers(
+    @Req() req: Request,
+    @Res() res: Response,
     @Body() users: CreateUsersBulkDtoReq["users"],
     @OpenApiBody() body: CreateUsersBulkDtoReq,
   ) {
@@ -143,7 +147,7 @@ export default class UsersController extends BaseController {
   }
 
   @Put('/:id')
-  // @Auth()
+  @Auth()
   @OpenApiPut('/:id')
   @OpenAPI({
     summary: 'Update a user',
@@ -181,7 +185,7 @@ export default class UsersController extends BaseController {
   }
 
   @Patch('/:id')
-  // @Auth()
+  @Auth()
   @OpenApiPatch('/:id')
   @OpenAPI({
     summary: 'Partially update a user',
@@ -224,7 +228,7 @@ export default class UsersController extends BaseController {
   }
 
   @Delete('/:id')
-  // @Auth()
+  @Auth()
   @OpenApiDelete('/:id')
   @OpenAPI({
     summary: 'Delete a user',
