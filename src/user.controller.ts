@@ -17,8 +17,10 @@ import {
 import { OpenApiControllerDesc } from './openapi/decorators';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq, CreateUserDtoRes } from './dto';
 import { CreateUsersBulkDtoReq, CreateUsersBulkDtoRes } from './dto/create-users.dto';
+import { LoginRequestDto, LoginResponseDto } from './dto/login.dto';
 import { BaseController, Controller, Get, Post, Put, Patch, Delete, Body, Param, Req, Res } from 'reef-framework';
-import { ConflictError, ValidationError, ApiError } from './errors/api.error';
+import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedError } from './errors/api.error';
+import { Auth } from './decorators/auth.decorator';
 
 @OpenApiJsonController('/users')
 @OpenApiControllerDesc({
@@ -28,6 +30,7 @@ import { ConflictError, ValidationError, ApiError } from './errors/api.error';
 @Controller('/users')
 export default class UsersController extends BaseController {
   @Get('/')
+  // @Auth()
   @OpenApiGet('/')
   @OpenAPI({
     summary: 'Get all users',
@@ -43,6 +46,7 @@ export default class UsersController extends BaseController {
   }
 
   @Get('/:id')
+  // @Auth()
   @OpenApiGet('/:id')
   @OpenAPI({
     summary: 'Get user by ID',
@@ -80,6 +84,7 @@ export default class UsersController extends BaseController {
   }
 
   @Post('/')
+  // @Auth()
   @OpenApiPost('/')
   @OpenAPI({
     summary: 'Create a new user',
@@ -100,7 +105,6 @@ export default class UsersController extends BaseController {
     @Body() name: string, 
     @OpenApiBody() body: CreateUserDtoReq,
   ) {
-
     const user = await UserService.createItem({ email, password_hash, name });
     return {
       status: 'success',
@@ -109,6 +113,7 @@ export default class UsersController extends BaseController {
   }
 
   @Post('/bulk')
+  // @Auth()
   @OpenApiPost('/bulk')
   @OpenAPI({
     summary: 'Create multiple users',
@@ -138,6 +143,7 @@ export default class UsersController extends BaseController {
   }
 
   @Put('/:id')
+  // @Auth()
   @OpenApiPut('/:id')
   @OpenAPI({
     summary: 'Update a user',
@@ -175,6 +181,7 @@ export default class UsersController extends BaseController {
   }
 
   @Patch('/:id')
+  // @Auth()
   @OpenApiPatch('/:id')
   @OpenAPI({
     summary: 'Partially update a user',
@@ -217,16 +224,11 @@ export default class UsersController extends BaseController {
   }
 
   @Delete('/:id')
+  // @Auth()
   @OpenApiDelete('/:id')
   @OpenAPI({
     summary: 'Delete a user',
     description: 'Deletes an existing user',
-    parameters: [{
-      in: 'path',
-      name: 'id',
-      required: true,
-      schema: { type: 'number' }
-    }]
   })
   @OpenApiResponseSchema(GetUsersDtoRes)
   async deleteUser(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
@@ -250,6 +252,31 @@ export default class UsersController extends BaseController {
         message: 'User not found'
       });
       return;
+    }
+  }
+
+  @Post('/login')
+  @OpenApiPost('/login')
+  @OpenAPI({
+    summary: 'Login user',
+    description: 'Authenticates a user and returns access and refresh tokens',
+  })
+  @OpenApiBody()
+  @OpenApiResponseSchema(LoginResponseDto)
+  async login(
+    @Body() body: LoginRequestDto
+  ) {
+    try {
+      const tokens = await UserService.login(body.email, body.password_hash);
+      return {
+        status: 'success',
+        data: tokens
+      };
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof UnauthorizedError) {
+        throw error;
+      }
+      throw new ApiError(500, 'Failed to login', error);
     }
   }
 } 

@@ -12,6 +12,7 @@ import { Reef } from 'reef-framework';
 import UsersController from './user.controller';
 import OpenAPIController from './openapi/openapi.controller';
 import swaggerUi from 'swagger-ui-express';
+import { useExpressServer } from 'routing-controllers';
 
 // Load environment variables
 dotenv.config();
@@ -69,6 +70,14 @@ reef.setTraceIdFn((req) => req.header('X-Trace-Id') || uuidv4());
 
 // Set up error handler
 reef.addErrorHandler(errorHandler);
+
+// Initialize controllers for OpenAPI documentation
+useExpressServer(app, {
+  controllers: [OpenAPIController],
+  routePrefix: '/api/v1',
+  defaultErrorHandler: false,
+  middlewares: []
+});
 
 // Launch reef framework
 reef.launch();

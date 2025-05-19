@@ -1,29 +1,24 @@
 import { User } from './database/models/user.model';
-import { ApiError, ValidationError, NotFoundError, ConflictError } from './errors/api.error';
-import { UniqueConstraintError, ValidationError as SequelizeValidationError } from 'sequelize';
 import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes } from './dto';
+import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedError } from './errors/api.error';
+import { v4 as uuidv4 } from 'uuid';
+import { Optional } from 'sequelize';
 
-export class UserService {
-  private static toPlainUser(user: User): GetUsersDtoRes {
-    const plainUser = user.get({ plain: true });
-    return {
-      id: plainUser.id,
-      email: plainUser.email,
-      name: plainUser.name,
-      last_login_at: plainUser.last_login_at,
-      password_hash: plainUser.password_hash,
-      created_at: plainUser.created_at,
-      updated_at: plainUser.updated_at
-    };
-  }
-
+export default class UserService {
   static async getAllItems(): Promise<GetUsersDtoRes[]> {
     try {
       const users = await User.findAll();
-      return users.map(user => this.toPlainUser(user));
+      return users.map((user: User) => ({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        password_hash: user.password_hash,
+        last_login_at: user.last_login_at,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      }));
     } catch (error) {
-      console.error('Error in getAllItems:', error);
-      throw new ApiError(500, 'Failed to fetch users', error);
+      throw new ApiError(500, 'Failed to get users', error);
     }
   }
 
@@ -31,82 +26,85 @@ export class UserService {
     try {
       const user = await User.findByPk(id);
       if (!user) {
-        throw new NotFoundError(`User with id ${id} not found`);
+        throw new NotFoundError('User not found');
       }
-      return this.toPlainUser(user);
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        password_hash: user.password_hash,
+        last_login_at: user.last_login_at,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      };
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      console.error('Error in getItemById:', error);
-      throw new ApiError(500, 'Failed to fetch user', error);
+      throw new ApiError(500, 'Failed to get user', error);
     }
   }
 
-  static async createItem(data: CreateUserDtoReq): Promise<GetUsersDtoRes> {
+  static async createItem(userData: CreateUserDtoReq): Promise<GetUsersDtoRes> {
     try {
-      console.log('\ndata:', data);
-      const user = await User.create(data as any); // Type assertion needed due to Sequelize typing limitations
-      return this.toPlainUser(user);
-    } catch (error: any) {
-      console.error('Error in createItem:', error);
-      
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-      if (error instanceof UniqueConstraintError) {
+      const existingUser = await User.findOne({ where: { email: userData.email } });
+      if (existingUser) {
         throw new ConflictError('User with this email already exists');
       }
-      if (error instanceof SequelizeValidationError) {
-        throw new ValidationError('Invalid user data', error.errors);
+
+      const user = await User.create(userData as Optional<User, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'last_login_at'>);
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        password_hash: user.password_hash,
+        last_login_at: user.last_login_at,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      };
+    } catch (error) {
+      if (error instanceof ConflictError) {
+        throw error;
       }
-      
-      console.error('Unexpected error in createItem:', {
-        error,
-        data,
-        stack: error?.stack
-      });
-      
-      throw new ApiError(500, 'Failed to create user', {
-        message: error?.message || 'Unknown error occurred',
-        details: error?.errors || error?.details
-      });
+      throw new ApiError(500, 'Failed to create user', error);
     }
   }
 
-  static async updateItem(id: number, data: UpdateUserDtoReq): Promise<GetUsersDtoRes> {
+  static async updateItem(id: number, userData: Partial<UpdateUserDtoReq>): Promise<GetUsersDtoRes> {
     try {
       const user = await User.findByPk(id);
       if (!user) {
-        throw new NotFoundError(`User with id ${id} not found`);
+        throw new NotFoundError('User not found');
       }
 
-      await user.update(data as any); // Type assertion needed due to Sequelize typing limitations
-      return this.toPlainUser(user);
-    } catch (error: any) {
-      console.error('Error in updateItem:', error);
-      
-      if (error instanceof NotFoundError || error instanceof ValidationError) {
+      await user.update(userData);
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        password_hash: user.password_hash,
+        last_login_at: user.last_login_at,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      };
+    } catch (error) {
+      if (error instanceof NotFoundError) {
         throw error;
-      }
-      if (error instanceof SequelizeValidationError) {
-        throw new ValidationError('Invalid user data', error.errors);
       }
       throw new ApiError(500, 'Failed to update user', error);
     }
   }
 
-  static async deleteItem(id: number): Promise<{ message: string }> {
+  static async deleteItem(id: number): Promise<boolean> {
     try {
       const user = await User.findByPk(id);
       if (!user) {
-        throw new NotFoundError(`User with id ${id} not found`);
+        throw new NotFoundError('User not found');
       }
+
       await user.destroy();
-      return { message: 'User deleted successfully' };
-    } catch (error: any) {
-      console.error('Error in deleteItem:', error);
-      
+      return true;
+    } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
       }
@@ -116,33 +114,59 @@ export class UserService {
 
   static async createBulkItems(users: CreateUserDtoReq[]): Promise<GetUsersDtoRes[]> {
     try {
-      const createdUsers = await User.bulkCreate(users as any[]); // Type assertion needed due to Sequelize typing limitations
-      return createdUsers.map(user => this.toPlainUser(user));
-    } catch (error: any) {
-      console.error('Error in createBulkItems:', error);
-      
-      if (error instanceof ValidationError) {
+      const createdUsers = await User.bulkCreate(
+        users.map(user => user as Optional<User, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'last_login_at'>)
+      );
+      return createdUsers.map((user: User) => ({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        password_hash: user.password_hash,
+        last_login_at: user.last_login_at,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      }));
+    } catch (error) {
+      throw new ApiError(500, 'Failed to create users', error);
+    }
+  }
+
+  static async findByEmail(email: string): Promise<User | null> {
+    try {
+      return await User.findOne({ where: { email } });
+    } catch (error) {
+      throw new ApiError(404, 'Failed to find user by email', error);
+    }
+  }
+
+  static async login(email: string, password_hash: string): Promise<{ access_token: string; refresh_token: string; expires_in: number }> {
+    try {
+      const user = await this.findByEmail(email);
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
+
+      if (user.password_hash !== password_hash) {
+        throw new UnauthorizedError('Invalid credentials');
+      }
+
+      const access_token = uuidv4();
+      const refresh_token = uuidv4();
+      const expires_in = 6 * 30 * 24 * 60 * 60; // 6 months in seconds
+
+      // Update last login time
+      await user.update({ last_login_at: new Date() });
+
+      return {
+        access_token,
+        refresh_token,
+        expires_in
+      };
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof UnauthorizedError) {
         throw error;
       }
-      if (error instanceof UniqueConstraintError) {
-        throw new ConflictError('One or more users with these emails already exist');
-      }
-      if (error instanceof SequelizeValidationError) {
-        throw new ValidationError('Invalid user data', error.errors);
-      }
-      
-      console.error('Unexpected error in createBulkItems:', {
-        error,
-        users,
-        stack: error?.stack
-      });
-      
-      throw new ApiError(500, 'Failed to create users', {
-        message: error?.message || 'Unknown error occurred',
-        details: error?.errors || error?.details
-      });
+      throw new ApiError(500, 'Failed to login', error);
     }
   }
 }
-
-export default UserService;

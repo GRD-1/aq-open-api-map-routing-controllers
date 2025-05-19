@@ -348,6 +348,51 @@
         "required": [
           "data"
         ]
+      },
+      "LoginRequestDto": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string",
+            "description": "User email address, must be a valid email format",
+            "example": "user@example.com"
+          },
+          "password_hash": {
+            "type": "string",
+            "description": "Hashed password for user authentication",
+            "example": "$2b$10$..."
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password_hash"
+        ]
+      },
+      "LoginResponseDto": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "Access token for API authentication",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "Refresh token for obtaining new access tokens",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "expires_in": {
+            "type": "number",
+            "description": "Token expiration time in seconds",
+            "example": 15552000
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in"
+        ]
       }
     }
   },
@@ -523,7 +568,7 @@
             "required": true,
             "schema": {
               "pattern": "[^\\/#\\?]+?",
-              "type": "number"
+              "type": "string"
             }
           }
         ],
@@ -586,6 +631,37 @@
           "Users"
         ],
         "description": "Creates multiple users in a single request"
+      }
+    },
+    "/api/v1/users/login": {
+      "post": {
+        "operationId": "UsersController.login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "description": "",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Login user",
+        "tags": [
+          "Users"
+        ],
+        "description": "Authenticates a user and returns access and refresh tokens"
       }
     }
   },
