@@ -69,6 +69,7 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
 
 #### Controller Decorators
 ```typescript
+@OpenApiAuth()
 @OpenApiJsonController('/users')
 @OpenApiControllerDesc({
   description: "Controller for managing user accounts",
@@ -78,6 +79,7 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
 
 #### Method Decorators
 ```typescript
+@OpenApiAuth()
 @OpenApiGet('/users')
 @OpenApiPost('/users')
 @OpenApiPut('/users/:id')
@@ -106,6 +108,7 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
   description: "Controller for managing user accounts",
   tags: ["Users"]
 })
+@OpenApiAuth()
 @Controller('/users')
 export class UsersController {
   @OpenApiPatch('/:id')

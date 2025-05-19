@@ -60,29 +60,40 @@ export function OpenApiProperty(options: OpenApiPropertyOptions): PropertyDecora
 }
 
 export function OpenApiAuth() {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    const openApi = Reflect.getMetadata('openapi', target, propertyKey) || {};
-    
-    // Add security requirement to the operation
-    openApi.security = [{
-      bearerAuth: [] // This matches the security scheme defined in your OpenAPI spec
-    }];
-
-    // Add security scheme to components if not already present
-    if (!openApi.components) {
-      openApi.components = {};
-    }
-    if (!openApi.components.securitySchemes) {
-      openApi.components.securitySchemes = {};
-    }
-    openApi.components.securitySchemes.bearerAuth = {
-      type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'JWT',
-      description: 'Enter your JWT token in the format: Bearer <token>'
+  return function (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) {
+    // Define security scheme
+    const securityScheme = {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Enter your JWT token in the format: Bearer <token>'
+      }
     };
 
-    Reflect.defineMetadata('openapi', openApi, target, propertyKey);
-    return descriptor;
+    // Define security requirement
+    const securityRequirement = [{ bearerAuth: [] }];
+
+    if (propertyKey && descriptor) {
+      // Method decorator
+      const openApi = Reflect.getMetadata('openapi', target, propertyKey) || {};
+      openApi.security = securityRequirement;
+      Reflect.defineMetadata('openapi', openApi, target, propertyKey);
+      return descriptor;
+    } else {
+      // Controller decorator
+      const openApi = Reflect.getMetadata('openapi', target) || {};
+      if (!openApi.components) {
+        openApi.components = {};
+      }
+      if (!openApi.components.securitySchemes) {
+        openApi.components.securitySchemes = securityScheme;
+      }
+      if (!openApi.security) {
+        openApi.security = securityRequirement;
+      }
+      Reflect.defineMetadata('openapi', openApi, target);
+      return target;
+    }
   };
 } 
