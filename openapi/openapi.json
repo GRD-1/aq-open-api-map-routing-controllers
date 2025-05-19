@@ -393,6 +393,51 @@
           "refresh_token",
           "expires_in"
         ]
+      },
+      "GetThingsDtoRes": {
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "created_at",
+          "updated_at"
+        ]
       }
     },
     "securitySchemes": {
@@ -706,12 +751,41 @@
         ],
         "description": "Authenticates a user and returns access and refresh tokens"
       }
+    },
+    "/api/v1/things/": {
+      "get": {
+        "operationId": "ThingsController.getAllThings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GetThingsDtoRes"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get all things",
+        "tags": [
+          "Things"
+        ],
+        "description": "Retrieves a list of all things in the system"
+      }
     }
   },
   "tags": [
     {
       "name": "Users",
       "description": "Controller for managing user accounts. Provides full CRUD operations"
+    },
+    {
+      "name": "Things",
+      "description": "Controller for managing things. Provides basic operations"
     }
   ]
 }

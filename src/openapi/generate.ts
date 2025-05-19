@@ -5,6 +5,7 @@ import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import fs from 'fs';
 import path from 'path';
 import UsersController from '../users/user.controller';
+import ThingsController from '../things/things.controller';
 
 interface OpenAPISpec {
   tags: Array<{ name: string; description: string }>;
@@ -41,7 +42,7 @@ export function generateOpenAPISpec() {
   const spec = routingControllersToSpec(
     storage,
     { 
-      controllers: [UsersController], // Only include UsersController
+      controllers: [UsersController, ThingsController],
       routePrefix: '/api/v1'  // Add the route prefix to match our API versioning
     },
     {
@@ -58,7 +59,7 @@ export function generateOpenAPISpec() {
   ) as OpenAPISpec;
 
   // Add controller metadata to tags
-  const controllers = [UsersController]; // Only include UsersController
+  const controllers = [UsersController, ThingsController];
   controllers.forEach(controller => {
     const metadata = Reflect.getMetadata('openapi:controller:desc', controller);
     if (metadata) {
@@ -80,8 +81,7 @@ export function generateOpenAPISpec() {
         tag.description = metadata.description;
       }
 
-      // Check if any method has OpenApiAuth decorator
-      let hasAuthDecorator = false;
+      // Process each method in the controller
       Object.entries(spec.paths).forEach(([path, pathItem]) => {
         Object.entries(pathItem).forEach(([method, operation]) => {
           if (operation.operationId?.startsWith(controller.name + '.')) {
@@ -91,31 +91,35 @@ export function generateOpenAPISpec() {
             const methodName = operation.operationId.split('.').pop();
             if (methodName) {
               const openApiMetadata = Reflect.getMetadata('openapi', controller.prototype, methodName);
+              
+              // Only add security if the method has OpenApiAuth decorator
               if (openApiMetadata?.security) {
                 operation.security = openApiMetadata.security;
-                hasAuthDecorator = true;
+                
+                // Add security scheme to components if not already present
+                if (!spec.components) {
+                  spec.components = {};
+                }
+                if (!spec.components.securitySchemes) {
+                  spec.components.securitySchemes = {
+                    bearerAuth: {
+                      type: 'http',
+                      scheme: 'bearer',
+                      bearerFormat: 'JWT',
+                      description: 'Enter your JWT token in the format: Bearer <token>'
+                    }
+                  };
+                }
+              } else {
+                // Remove security if no OpenApiAuth decorator
+                delete operation.security;
+                // Also remove any global security
+                delete spec.security;
               }
             }
           }
         });
       });
-
-      // If any method has OpenApiAuth decorator, add security scheme to components
-      if (hasAuthDecorator) {
-        if (!spec.components) {
-          spec.components = {};
-        }
-        if (!spec.components.securitySchemes) {
-          spec.components.securitySchemes = {
-            bearerAuth: {
-              type: 'http',
-              scheme: 'bearer',
-              bearerFormat: 'JWT',
-              description: 'Enter your JWT token in the format: Bearer <token>'
-            }
-          };
-        }
-      }
 
       // Get controller-level OpenAPI metadata
       const controllerOpenApi = Reflect.getMetadata('openapi', controller);

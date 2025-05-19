@@ -27,6 +27,7 @@ import { OpenAPI as RoutingOpenAPI, ResponseSchema } from 'routing-controllers-o
 import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 import { User } from '../database/models/user.model';
 
+@OpenApiAuth()
 @OpenApiJsonController('/users')
 @OpenApiControllerDesc({
   description: 'Controller for managing user accounts. Provides full CRUD operations',

@@ -6,10 +6,7 @@ import { testConnection } from './database';
 import './database/models';  // Initialize models
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/error-handler.middleware';
-import * as fs from 'fs';
-import * as path from 'path';
 import { Reef } from 'reef-framework';
-import UsersController from './user.controller';
 import OpenAPIController from './openapi/openapi.controller';
 import swaggerUi from 'swagger-ui-express';
 import { useExpressServer } from 'routing-controllers';
