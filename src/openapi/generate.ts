@@ -46,15 +46,7 @@ export function generateOpenAPISpec() {
     },
     {
       components: { 
-        schemas,
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-            description: 'Enter your JWT token in the format: Bearer <token>'
-          }
-        }
+        schemas
       },
       info: {
         title: 'AQ Open API Map Routing Controllers',
@@ -88,19 +80,62 @@ export function generateOpenAPISpec() {
         tag.description = metadata.description;
       }
 
-      // Update operation tags and add security requirements
+      // Check if any method has OpenApiAuth decorator
+      let hasAuthDecorator = false;
       Object.entries(spec.paths).forEach(([path, pathItem]) => {
         Object.entries(pathItem).forEach(([method, operation]) => {
           if (operation.operationId?.startsWith(controller.name + '.')) {
             operation.tags = [tagName];
             
-            // Add security requirement for all methods except login
-            if (operation.operationId !== 'UsersController.login') {
-              operation.security = [{ bearerAuth: [] }];
+            // Get OpenAPI metadata for the method
+            const methodName = operation.operationId.split('.').pop();
+            if (methodName) {
+              const openApiMetadata = Reflect.getMetadata('openapi', controller.prototype, methodName);
+              if (openApiMetadata?.security) {
+                operation.security = openApiMetadata.security;
+                hasAuthDecorator = true;
+              }
             }
           }
         });
       });
+
+      // If any method has OpenApiAuth decorator, add security scheme to components
+      if (hasAuthDecorator) {
+        if (!spec.components) {
+          spec.components = {};
+        }
+        if (!spec.components.securitySchemes) {
+          spec.components.securitySchemes = {
+            bearerAuth: {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'JWT',
+              description: 'Enter your JWT token in the format: Bearer <token>'
+            }
+          };
+        }
+      }
+
+      // Get controller-level OpenAPI metadata
+      const controllerOpenApi = Reflect.getMetadata('openapi', controller);
+      if (controllerOpenApi) {
+        // Add security schemes if defined at controller level
+        if (controllerOpenApi.components?.securitySchemes) {
+          if (!spec.components) {
+            spec.components = {};
+          }
+          if (!spec.components.securitySchemes) {
+            spec.components.securitySchemes = {};
+          }
+          Object.assign(spec.components.securitySchemes, controllerOpenApi.components.securitySchemes);
+        }
+
+        // Add global security if defined at controller level
+        if (controllerOpenApi.security) {
+          spec.security = controllerOpenApi.security;
+        }
+      }
     }
   });
 
