@@ -3,6 +3,7 @@ import { generateOpenAPISpec } from './generate';
 import { mapConfigs } from './configs';
 import { Request, Response, NextFunction } from 'express';
 import * as swaggerUi from 'swagger-ui-express';
+import * as fs from 'fs';
 
 // Extend Express Request type globally
 declare global {
@@ -15,22 +16,39 @@ declare global {
 
 @Controller('/openapi')
 export default class OpenAPIController extends BaseController {
-  private static swaggerMiddleware = [
-    (req: Request, _res: Response, next: NextFunction) => {
-      req.swaggerDoc = null;
-      next();
-    },
-    ...swaggerUi.serve,
-    swaggerUi.setup(null, {
-      swaggerOptions: {
-        url: '/api/v1/openapi/json',
-        persistAuthorization: true
-      }
-    })
-  ];
-
   static setupSwaggerUI(app: any) {
-    app.use('/api/v1/openapi/ui', OpenAPIController.swaggerMiddleware);
+    // Serve Swagger UI static files
+    app.use('/api/v1/openapi/ui', swaggerUi.serve);
+
+    // Handle Swagger UI HTML
+    app.get('/api/v1/openapi/ui', async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        // Get the mapName from query parameters
+        const mapName = req.query.mapName as string || 'all';
+        console.log('mapName', mapName);
+        console.log('mapConfigs[mapName]', mapConfigs[mapName]);
+        
+        if (!mapConfigs[mapName]) {
+          throw new Error(`Invalid map name: ${mapName}. Available maps: ${Object.keys(mapConfigs).join(', ')}`);
+        }
+
+        // Generate new spec
+        await generateOpenAPISpec(mapConfigs[mapName]);
+        const spec = JSON.parse(fs.readFileSync(mapConfigs[mapName].outputPath, 'utf-8'));
+
+        // Setup Swagger UI with the generated spec
+        const swaggerUiHandler = swaggerUi.setup(spec, {
+          swaggerOptions: {
+            persistAuthorization: true
+          }
+        });
+
+        // Call the Swagger UI handler
+        swaggerUiHandler(req, res, next);
+      } catch (error) {
+        next(error);
+      }
+    });
   }
 
   @Get('/json')
@@ -39,8 +57,9 @@ export default class OpenAPIController extends BaseController {
       throw new Error(`Invalid map name: ${mapName}. Available maps: ${Object.keys(mapConfigs).join(', ')}`);
     }
 
-    // Generate new spec using the selected configuration
-    return generateOpenAPISpec(mapConfigs[mapName]);
+    // Generate new spec
+    await generateOpenAPISpec(mapConfigs[mapName]);
+    return JSON.parse(fs.readFileSync(mapConfigs[mapName].outputPath, 'utf-8'));
   }
 
   @Post('/generate')
@@ -49,8 +68,9 @@ export default class OpenAPIController extends BaseController {
       throw new Error(`Invalid map name: ${mapName}. Available maps: ${Object.keys(mapConfigs).join(', ')}`);
     }
 
-    // Generate new spec using the selected configuration
-    generateOpenAPISpec(mapConfigs[mapName]);
+    // Generate new spec
+    await generateOpenAPISpec(mapConfigs[mapName]);
+
     return {
       status: 'success',
       message: `OpenAPI specification for "${mapName}" map generated successfully`

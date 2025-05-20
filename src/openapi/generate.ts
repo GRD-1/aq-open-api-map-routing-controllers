@@ -6,6 +6,7 @@ import { OpenAPIObject, ResponseObject, ParameterObject, SecuritySchemeObject, C
 import fs from 'fs';
 import path from 'path';
 import { OpenAPIMapConfig } from './types';
+import { MetadataArgsStorage } from 'routing-controllers';
 
 interface OpenAPISpec extends OpenAPIObject {
   tags: Array<{ name: string; description: string }>;
@@ -38,14 +39,48 @@ function findSchemaRefs(obj: any, refs: Set<string>) {
 }
 
 export function generateOpenAPISpec(config: OpenAPIMapConfig) {
+  console.log('config', config);
   // Get metadata from routing-controllers
   const storage = getMetadataArgsStorage();
+  
+  // Create a new storage instance with filtered metadata
+  const newStorage = new MetadataArgsStorage();
+  
+  // Filter and copy controller metadata
+  newStorage.controllers = storage.controllers.filter(ctrl => 
+    config.controllers.some(c => ctrl.target === c || ctrl.target.prototype instanceof c)
+  );
+  
+  // Filter and copy action metadata
+  newStorage.actions = storage.actions.filter(action => 
+    config.controllers.some(c => action.target === c || action.target.prototype instanceof c)
+  );
+  
+  // Filter and copy param metadata
+  newStorage.params = storage.params.filter(param => 
+    config.controllers.some(c => {
+      const target = typeof param.object === 'function' ? param.object : param.object.constructor;
+      return target === c || target.prototype instanceof c;
+    })
+  );
+  
+  // Filter and copy response handler metadata
+  newStorage.responseHandlers = storage.responseHandlers.filter(handler => 
+    config.controllers.some(c => handler.target === c || handler.target.prototype instanceof c)
+  );
+
+  // Copy other metadata as is since they're not controller-specific
+  newStorage.middlewares = storage.middlewares;
+  newStorage.interceptors = storage.interceptors;
+  newStorage.uses = storage.uses;
+  newStorage.useInterceptors = storage.useInterceptors;
+
   const schemas = validationMetadatasToSchemas() as Record<string, SchemaObject | ReferenceObject>;
   const usedSchemas = new Set<string>();
 
   // Generate initial spec with schemas
   const spec = routingControllersToSpec(
-    storage,
+    newStorage,
     { 
       controllers: config.controllers,
       routePrefix: '/api/v1',
@@ -99,18 +134,6 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
             
             const methodName = operation.operationId.split('.').pop();
             if (methodName) {
-              // Check for both custom and routing-controllers OpenAPI decorators
-              const hasCustomOpenApiDecorator = 
-                Reflect.getMetadata('openapi:action', controller.prototype, methodName) ||
-                Reflect.getMetadata('openapi:response', controller.prototype, methodName) ||
-                Reflect.getMetadata('openapi:request', controller.prototype, methodName);
-
-              const hasRoutingOpenApiDecorator = 
-                Reflect.getMetadata('routing-controllers:openapi', controller.prototype, methodName) ||
-                Reflect.getMetadata('routing-controllers:response-schema', controller.prototype, methodName);
-
-              const hasOpenApiDecorator = hasCustomOpenApiDecorator || hasRoutingOpenApiDecorator;
-
               // Collect schemas from request body
               if (operation.requestBody?.content?.['application/json']?.schema) {
                 findSchemaRefs(operation.requestBody.content['application/json'].schema, usedSchemas);
