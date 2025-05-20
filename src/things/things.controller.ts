@@ -12,7 +12,7 @@ import { BaseController, Controller, Get, Req, Res } from 'reef-framework';
 
 @OpenApiJsonController('/things')
 @OpenApiControllerDesc({
-  description: 'Controller for managing things. Provides basic operations RAVOLY',
+  description: 'Controller for managing things. Provides basic operations',
   tags: ['Things']
 })
 @Controller('/things')
