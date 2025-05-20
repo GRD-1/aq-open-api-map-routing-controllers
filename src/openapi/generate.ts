@@ -5,9 +5,7 @@ import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import { OpenAPIObject, ResponseObject, ParameterObject, SecuritySchemeObject, ComponentsObject, SchemaObject, ReferenceObject } from 'routing-controllers-openapi/node_modules/openapi3-ts/dist/model/OpenApi';
 import fs from 'fs';
 import path from 'path';
-import UsersController from '../users/user.controller';
-import ThingsController from '../things/things.controller';
-import CustomersController from '../customers/customers.controller';
+import { OpenAPIMapConfig } from './types';
 
 interface OpenAPISpec extends OpenAPIObject {
   tags: Array<{ name: string; description: string }>;
@@ -39,7 +37,7 @@ function findSchemaRefs(obj: any, refs: Set<string>) {
   }
 }
 
-export function generateOpenAPISpec() {
+export function generateOpenAPISpec(config: OpenAPIMapConfig) {
   // Get metadata from routing-controllers
   const storage = getMetadataArgsStorage();
   const schemas = validationMetadatasToSchemas() as Record<string, SchemaObject | ReferenceObject>;
@@ -49,7 +47,7 @@ export function generateOpenAPISpec() {
   const spec = routingControllersToSpec(
     storage,
     { 
-      controllers: [UsersController, ThingsController, CustomersController],
+      controllers: config.controllers,
       routePrefix: '/api/v1',
       defaults: {
         paramOptions: {
@@ -72,19 +70,13 @@ export function generateOpenAPISpec() {
           } as SecuritySchemeObject
         }
       },
-      info: {
-        title: 'AQ Open API Map Routing Controllers',
-        version: '1.0.0',
-        description: 'API documentation for the AQ Open API Map Routing Controllers',
-      },
+      info: config.info,
       tags: []
     },
   ) as OpenAPISpec;
 
   // Add controller metadata to tags and collect used schemas
-  const controllers = [UsersController, ThingsController, CustomersController];
-  
-  controllers.forEach(controller => {
+  config.controllers.forEach(controller => {
     const metadata = Reflect.getMetadata('openapi:controller:desc', controller);
     if (metadata) {
       const controllerName = controller.name.replace('Controller', '').split(/(?=[A-Z])/).join(' ');
@@ -190,16 +182,22 @@ export function generateOpenAPISpec() {
   spec.components = spec.components || {};
   spec.components.schemas = filteredSchemas;
 
+  // Create the output directory if it doesn't exist
+  const outputDir = path.dirname(config.outputPath);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
   // Write the OpenAPI spec to a file
-  const outputPath = path.join(process.cwd(), 'openapi', 'openapi.json');
-  fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
+  fs.writeFileSync(config.outputPath, JSON.stringify(spec, null, 2));
   console.log('OpenAPI specification has been generated successfully!');
-  console.log(`File written to: ${outputPath}`);
+  console.log(`File written to: ${config.outputPath}`);
 
   return spec;
 }
 
 // Only run if this file is being executed directly
 if (require.main === module) {
-  generateOpenAPISpec();
+  const { allConfig } = require('./configs/all.config');
+  generateOpenAPISpec(allConfig);
 } 
