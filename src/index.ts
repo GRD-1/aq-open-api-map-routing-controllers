@@ -1,53 +1,24 @@
-import express, { Express, Request } from 'express';
+import express from 'express';
 import { join } from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { CustomLogger, requestLogger } from './logger';
-import { testConnection } from './database';
-import './database/models';  // Initialize models
-import dotenv from 'dotenv';
-import { errorHandler } from './middleware/error-handler.middleware';
-import { Reef } from 'reef-framework';
-import OpenAPIController from './openapi/openapi.controller';
-import swaggerUi from 'swagger-ui-express';
 import { useExpressServer } from 'routing-controllers';
+import { Reef } from 'reef-framework';
+import { v4 as uuidv4 } from 'uuid';
+import { CustomLogger } from './logger';
+import { errorHandler } from './middleware/error-handler.middleware';
+import { testConnection } from './database';
+import OpenAPIController from './openapi/openapi.controller';
 
-// Load environment variables
-dotenv.config();
+// Create Express app
+const app = express();
 
 // Initialize logger
 const logger = new CustomLogger();
 
-// Create Express application
-const app: Express = express();
-
-// Extend Request type to include id
-declare global {
-  namespace Express {
-    interface Request {
-      id: string;
-    }
-  }
-}
-
-// Add request ID middleware
-app.use((req, res, next) => {
-  req.id = uuidv4();
-  next();
-});
-
-// Add request logging middleware
-app.use(requestLogger(logger));
-
 // Parse JSON bodies
 app.use(express.json());
 
-// Setup Swagger UI
-app.use('/api/v1/openapi/ui', swaggerUi.serve, swaggerUi.setup(null, {
-  swaggerOptions: {
-    url: '/api/v1/openapi/json',
-    persistAuthorization: true
-  }
-}));
+// Setup Swagger UI before Reef initialization
+OpenAPIController.setupSwaggerUI(app);
 
 // Initialize Reef framework
 const reef = new Reef(app);

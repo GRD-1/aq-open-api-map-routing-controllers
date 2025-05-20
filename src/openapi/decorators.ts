@@ -37,14 +37,9 @@ export interface OpenApiControllerDescOptions {
   tags?: string[];
 }
 
-export function OpenApiControllerDesc(options: OpenApiControllerDescOptions): ClassDecorator {
-  return function (target: Function): any {
-    // Store metadata on both the constructor and prototype
+export function OpenApiControllerDesc(options: OpenApiControllerDescOptions) {
+  return function (target: any) {
     Reflect.defineMetadata('openapi:controller:desc', options, target);
-    Reflect.defineMetadata('openapi:controller:desc', options, target.prototype);
-    
-    // Log for debugging
-    console.debug(`Defined controller metadata for ${target.name}:`, options);
   };
 }
 
