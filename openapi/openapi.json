@@ -438,6 +438,139 @@
           "created_at",
           "updated_at"
         ]
+      },
+      "GetCustomersDtoRes": {
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "phone",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "GetCustomerByIdDtoRes": {
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "phone",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "GetCustomerRequisitesDtoRes": {
+        "properties": {
+          "bank_name": {
+            "type": "string"
+          },
+          "bank_account": {
+            "type": "string"
+          },
+          "bank_code": {
+            "type": "string"
+          },
+          "tax_id": {
+            "type": "string"
+          },
+          "company_name": {
+            "type": "string"
+          },
+          "company_address": {
+            "type": "string"
+          },
+          "customer_id": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bank_name",
+          "bank_account",
+          "bank_code",
+          "tax_id",
+          "company_name",
+          "company_address",
+          "customer_id"
+        ]
       }
     },
     "securitySchemes": {
@@ -776,6 +909,27 @@
         ],
         "description": "Retrieves a list of all things in the system"
       }
+    },
+    "/api/v1/customers/": {
+      "get": {
+        "operationId": "CustomersController.getCustomerById",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCustomerByIdDtoRes"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get customer by id",
+        "tags": [
+          "Customers"
+        ]
+      }
     }
   },
   "tags": [
@@ -786,6 +940,10 @@
     {
       "name": "Things",
       "description": "Controller for managing things. Provides basic operations"
+    },
+    {
+      "name": "Customers",
+      "description": "Controller for managing user accounts. Provides full CRUD operations"
     }
   ]
 }
