@@ -1,5 +1,5 @@
 import { BaseController, Controller, Post, Get } from 'reef-framework';
-import { generateOpenAPISpec, writeOpenAPISpec } from './generate';
+import { generateOpenAPISpec } from './generate';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -7,17 +7,13 @@ import * as path from 'path';
 export default class OpenAPIController extends BaseController {
   @Get('/json')
   async getOpenAPIJson(): Promise<any> {
-    // Generate new spec
-    const spec = generateOpenAPISpec();
-    // Write to file
-    writeOpenAPISpec(spec);
-    return spec;
+    // Generate new spec and write to file
+    return generateOpenAPISpec();
   }
 
   @Post('/generate')
   async generateOpenAPI(): Promise<{ status: string; message: string }> {
-    const spec = generateOpenAPISpec();
-    writeOpenAPISpec(spec);
+    generateOpenAPISpec();
     return {
       status: 'success',
       message: 'OpenAPI specification generated successfully'

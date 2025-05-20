@@ -9,8 +9,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "jest",
     "migrate:up": "sequelize-cli db:migrate",
-    "migrate:down": "sequelize-cli db:migrate:undo:all",
-    "generate:openapi": "ts-node src/openapi/generate.ts"
+    "migrate:down": "sequelize-cli db:migrate:undo:all"
   },
   "dependencies": {
     "@types/bcrypt": "^5.0.2",

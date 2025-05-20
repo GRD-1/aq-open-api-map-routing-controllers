@@ -103,116 +103,6 @@
           "updated_at"
         ]
       },
-      "UpdateUserDtoReq": {
-        "properties": {
-          "email": {
-            "format": "email",
-            "type": "string",
-            "description": "User email address to update, must be a valid email format",
-            "example": "updated@example.com"
-          },
-          "password_hash": {
-            "type": "string",
-            "description": "New hashed password for user authentication",
-            "example": "$2b$10$..."
-          },
-          "name": {
-            "type": "string",
-            "description": "New full name of the user",
-            "example": "John Updated Doe"
-          }
-        },
-        "type": "object"
-      },
-      "UpdateUsersDtoRes": {
-        "properties": {
-          "id": {
-            "type": "number",
-            "description": "Unique identifier of the updated user",
-            "example": 1
-          },
-          "email": {
-            "format": "email",
-            "type": "string",
-            "description": "Updated email address of the user",
-            "example": "updated@example.com"
-          },
-          "name": {
-            "type": "string",
-            "description": "Updated full name of the user",
-            "example": "John Updated Doe"
-          },
-          "last_login_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Date and time of the last user login, can be null",
-            "example": "2024-03-15T10:30:00Z"
-          },
-          "password_hash": {
-            "type": "string",
-            "description": "Updated hashed password for user authentication",
-            "example": "$2b$10$..."
-          },
-          "created_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Timestamp when the user account was created",
-            "example": "2024-03-15T10:00:00Z"
-          },
-          "updated_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ],
-            "description": "Timestamp when the user account was last updated",
-            "example": "2024-03-15T10:30:00Z"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "email",
-          "name",
-          "password_hash",
-          "created_at",
-          "updated_at"
-        ]
-      },
-      "GetUsersDtoReq": {
-        "properties": {
-          "id": {
-            "type": "number",
-            "description": "Unique identifier of the user to retrieve",
-            "example": 1
-          }
-        },
-        "type": "object",
-        "required": [
-          "id"
-        ]
-      },
       "GetUsersDtoRes": {
         "properties": {
           "id": {
@@ -349,26 +239,6 @@
           "data"
         ]
       },
-      "LoginRequestDto": {
-        "properties": {
-          "email": {
-            "format": "email",
-            "type": "string",
-            "description": "User email address, must be a valid email format",
-            "example": "user@example.com"
-          },
-          "password_hash": {
-            "type": "string",
-            "description": "Hashed password for user authentication",
-            "example": "$2b$10$..."
-          }
-        },
-        "type": "object",
-        "required": [
-          "email",
-          "password_hash"
-        ]
-      },
       "LoginResponseDto": {
         "properties": {
           "access_token": {
@@ -439,55 +309,6 @@
           "updated_at"
         ]
       },
-      "GetCustomersDtoRes": {
-        "properties": {
-          "id": {
-            "type": "number"
-          },
-          "name": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string"
-          },
-          "created_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ]
-          },
-          "updated_at": {
-            "oneOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "format": "date-time",
-                "type": "string"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "email",
-          "phone",
-          "created_at",
-          "updated_at"
-        ]
-      },
       "GetCustomerByIdDtoRes": {
         "properties": {
           "id": {
@@ -535,41 +356,6 @@
           "phone",
           "created_at",
           "updated_at"
-        ]
-      },
-      "GetCustomerRequisitesDtoRes": {
-        "properties": {
-          "bank_name": {
-            "type": "string"
-          },
-          "bank_account": {
-            "type": "string"
-          },
-          "bank_code": {
-            "type": "string"
-          },
-          "tax_id": {
-            "type": "string"
-          },
-          "company_name": {
-            "type": "string"
-          },
-          "company_address": {
-            "type": "string"
-          },
-          "customer_id": {
-            "type": "number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "bank_name",
-          "bank_account",
-          "bank_code",
-          "tax_id",
-          "company_name",
-          "company_address",
-          "customer_id"
         ]
       }
     },
@@ -629,7 +415,7 @@
             }
           },
           "description": "CreateUserDtoReq",
-          "required": false
+          "required": true
         },
         "responses": {
           "200": {
@@ -819,7 +605,7 @@
             }
           },
           "description": "CreateUsersBulkDtoReq",
-          "required": false
+          "required": true
         },
         "responses": {
           "200": {
@@ -864,7 +650,7 @@
             }
           },
           "description": "",
-          "required": false
+          "required": true
         },
         "responses": {
           "200": {
