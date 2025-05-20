@@ -39,7 +39,6 @@ function findSchemaRefs(obj: any, refs: Set<string>) {
 }
 
 export function generateOpenAPISpec(config: OpenAPIMapConfig) {
-  console.log('config', config);
   // Get metadata from routing-controllers
   const storage = getMetadataArgsStorage();
   

@@ -8,6 +8,9 @@ A Node.js application that demonstrates the implementation of OpenAPI documentat
 - [OpenAPI Documentation](#openapi-documentation)
   - [Overview](#overview)
   - [Decorators](#decorators)
+  - [Configs](#configs)
+    - [Available Maps](#available-maps)
+    - [Creating a New Map](#creating-a-new-map)
   - [Working with Documentation](#working-with-documentation)
   - [References](#references)
 
@@ -68,34 +71,44 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
 ### Decorators
 
 #### Controller Decorators
-```typescript
-@OpenApiAuth()
-@OpenApiJsonController('/users')
-@OpenApiControllerDesc({
-  description: "Controller for managing user accounts",
-  tags: ["Users"]
-})
-```
+
+- `@OpenApiAuth()`                          - Marks controller methods as requiring authentication
+
+- `@OpenApiJsonController('/users')`        - Defines base path and marks controller as returning JSON
+
+- `@OpenApiControllerDesc({ ... })`         - Provides description and tags for Swagger UI grouping
+
 
 #### Method Decorators
-```typescript
-@OpenApiAuth()
-@OpenApiGet('/users')
-@OpenApiPost('/users')
-@OpenApiPut('/users/:id')
-@OpenApiPatch('/users/:id')
-@OpenApiDelete('/users/:id')
-```
+
+- `@OpenApiAuth()`                          - Marks method as requiring authentication
+
+- `@OpenApiGet('/users')`                   - Defines GET endpoint with path
+
+- `@OpenApiPost('/users')`                  - Defines POST endpoint with path
+
+- `@OpenApiPut('/users/:id')`               - Defines PUT endpoint with path
+
+- `@OpenApiPatch('/users/:id')`             - Defines PATCH endpoint with path
+
+- `@OpenApiDelete('/users/:id')`            - Defines DELETE endpoint with path
+
 
 #### Parameter Decorators
-```typescript
-@OpenApiBody()
-@OpenApiParam('id')
-@OpenApiReq()
-@OpenApiRes()
-```
+
+- `@OpenApiBody()`                          - Marks parameter as request body and documents it in Swagger UI
+
+- `@OpenApiParam('id')`                     - Marks parameter as path parameter and documents it in Swagger UI
+
+- `@OpenApiReq()`                           - Marks parameter as Express Request object
+
+- `@OpenApiRes()`                           - Marks parameter as Express Response object
 
 #### Response Schema Decorator
+
+- `@OpenApiResponseSchema(UserResponseDto)` - Defines the response schema for Swagger UI documentation
+
+Example:
 ```typescript
 @OpenApiResponseSchema(UserResponseDto)
 ```
@@ -103,27 +116,81 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
 #### Usage Example
 
 ```typescript
-@OpenApiJsonController('/users')
-@OpenApiControllerDesc({
+@OpenApiJsonController('/users')                    // Base path for all controller endpoints
+@OpenApiControllerDesc({                            // Controller description and grouping
   description: "Controller for managing user accounts",
   tags: ["Users"]
 })
-@OpenApiAuth()
+@OpenApiAuth()                                      // All methods require authentication
 @Controller('/users')
 export class UsersController {
-  @OpenApiPatch('/:id')
-  @OpenAPI({
+  @OpenApiPatch('/:id')                             // PATCH endpoint at /users/:id
+  @OpenAPI({                                        // Additional OpenAPI metadata
     summary: 'Partially update a user',
     description: 'Updates specific fields of an existing user'
   })
-  @OpenApiResponseSchema(UpdateUsersDtoRes)
+  @OpenApiResponseSchema(UpdateUsersDtoRes)         // Response will match this schema
   async patchUser(
-    @OpenApiParam('id') id: number,
-    @OpenApiBody() body: Partial<UpdateUserDtoReq>
+    @OpenApiParam('id') id: number,                 // Path parameter
+    @OpenApiBody() body: Partial<UpdateUserDtoReq>  // Request body
   ): Promise<UpdateUsersDtoRes> {
     // ...
   }
 }
+```
+
+### Configs
+
+The OpenAPI documentation can be split into multiple maps, each containing a specific set of controllers. This is useful when you want to provide different API documentation for different parts of your application.
+
+#### Available Maps
+
+The maps are configured in `src/openapi/configs/`:
+- `all.config.ts` - includes all controllers
+- `users-and-things.config.ts` - includes only Users and Things controllers
+- `customers-and-things.config.ts` - includes only Customers and Things controllers
+
+#### Creating a New Map
+
+To create a new map:
+
+1. Create a new config file in `src/openapi/configs/`, e.g., `my-new-map.config.ts`:
+```typescript
+import { OpenAPIMapConfig } from '../types';
+import UsersController from '../../users/user.controller';
+import ThingsController from '../../things/things.controller';
+import path from 'path';
+
+export const myNewMapConfig: OpenAPIMapConfig = {
+  controllers: [
+    UsersController,
+    ThingsController
+  ],
+  info: {
+    title: 'AQ Open API Map - My New Map',
+    version: '1.0.0',
+    description: 'API documentation for specific controllers'
+  },
+  outputPath: path.join(process.cwd(), 'openapi', 'my-new-map.json')
+};
+```
+
+2. Register your map in `src/openapi/configs/index.ts`:
+```typescript
+import { OpenAPIMapConfig } from '../types';
+import { allConfig } from './all.config';
+import { myNewMapConfig } from './my-new-map.config';
+
+export const mapConfigs: Record<string, OpenAPIMapConfig> = {
+  'all': allConfig,
+  'my-new-map': myNewMapConfig
+};
+```
+
+Your new map will be automatically available at:
+```
+http://localhost:3000/api/v1/openapi/ui?mapName=my-new-map
+http://localhost:3000/api/v1/openapi/json?mapName=my-new-map
 ```
 
 ### Working with Documentation
@@ -140,17 +207,16 @@ To get the map in JSON format:
 http://localhost:3000/api/v1/openapi/json
 ```
 
-To generate map:
-```bash
-curl -X POST http://localhost:3000/api/v1/openapi/generate
+The OpenAPI specification is automatically generated when accessing either the UI or JSON endpoints. You can specify which map to use by adding the `mapName` query parameter:
+
+```
+http://localhost:3000/api/v1/openapi/ui?mapName=users-and-things
 ```
 
-To generate map using CLI:
-```bash
-npm run generate:openapi
-```
-
-The generated specification will be saved to `openapi/openapi.json` in both cases.
+Available maps:
+- `all` (default) - includes all controllers
+- `users-and-things` - includes only Users and Things controllers
+- `customers-and-things` - includes only Customers and Things controllers
 
 ### References
 

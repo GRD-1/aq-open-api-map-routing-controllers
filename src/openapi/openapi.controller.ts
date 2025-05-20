@@ -1,4 +1,4 @@
-import { BaseController, Controller, Post, Get, Query } from 'reef-framework';
+import { BaseController, Controller, Get, Query } from 'reef-framework';
 import { generateOpenAPISpec } from './generate';
 import { mapConfigs } from './configs';
 import { Request, Response, NextFunction } from 'express';
@@ -25,9 +25,7 @@ export default class OpenAPIController extends BaseController {
       try {
         // Get the mapName from query parameters
         const mapName = req.query.mapName as string || 'all';
-        console.log('mapName', mapName);
-        console.log('mapConfigs[mapName]', mapConfigs[mapName]);
-        
+
         if (!mapConfigs[mapName]) {
           throw new Error(`Invalid map name: ${mapName}. Available maps: ${Object.keys(mapConfigs).join(', ')}`);
         }
@@ -59,21 +57,8 @@ export default class OpenAPIController extends BaseController {
 
     // Generate new spec
     await generateOpenAPISpec(mapConfigs[mapName]);
+
+    // Read and return the generated spec
     return JSON.parse(fs.readFileSync(mapConfigs[mapName].outputPath, 'utf-8'));
-  }
-
-  @Post('/generate')
-  async generateOpenAPI(@Query('mapName') mapName: string = 'all'): Promise<{ status: string; message: string }> {
-    if (!mapConfigs[mapName]) {
-      throw new Error(`Invalid map name: ${mapName}. Available maps: ${Object.keys(mapConfigs).join(', ')}`);
-    }
-
-    // Generate new spec
-    await generateOpenAPISpec(mapConfigs[mapName]);
-
-    return {
-      status: 'success',
-      message: `OpenAPI specification for "${mapName}" map generated successfully`
-    };
   }
 } 
