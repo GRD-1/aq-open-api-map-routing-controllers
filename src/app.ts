@@ -5,6 +5,7 @@ import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import OpenAPIController from './openapi/openapi.controller';
 import UsersController from './users/user.controller';
 import ThingsController from './things/things.controller';
+import CustomersController from './customers/customers.controller';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { errorHandler } from './middleware/error-handler.middleware';
 import { sequelize } from './database';
@@ -13,7 +14,7 @@ import { CustomLogger } from './logger';
 const logger = new CustomLogger();
 
 const app = createExpressServer({
-  controllers: [OpenAPIController, UsersController, ThingsController],
+  controllers: [OpenAPIController, UsersController, ThingsController, CustomersController],
   middlewares: [AuthMiddleware, errorHandler(logger)],
   defaultErrorHandler: false,
   validation: true,

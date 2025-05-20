@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import UsersController from '../users/user.controller';
 import ThingsController from '../things/things.controller';
+import CustomersController from '../customers/customers.controller';
 
 interface OpenAPISpec {
   tags: Array<{ name: string; description: string }>;
@@ -42,7 +43,7 @@ export function generateOpenAPISpec() {
   const spec = routingControllersToSpec(
     storage,
     { 
-      controllers: [UsersController, ThingsController],
+      controllers: [UsersController, ThingsController, CustomersController],
       routePrefix: '/api/v1'  // Add the route prefix to match our API versioning
     },
     {
@@ -59,7 +60,7 @@ export function generateOpenAPISpec() {
   ) as OpenAPISpec;
 
   // Add controller metadata to tags
-  const controllers = [UsersController, ThingsController];
+  const controllers = [UsersController, ThingsController, CustomersController];
   controllers.forEach(controller => {
     const metadata = Reflect.getMetadata('openapi:controller:desc', controller);
     if (metadata) {
