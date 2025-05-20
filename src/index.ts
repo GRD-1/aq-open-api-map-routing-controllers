@@ -7,6 +7,7 @@ import { CustomLogger } from './logger';
 import { errorHandler } from './middleware/error-handler.middleware';
 import { testConnection } from './database';
 import OpenAPIController from './openapi/openapi.controller';
+import * as swaggerUi from 'swagger-ui-express';
 
 // Create Express app
 const app = express();
@@ -17,8 +18,17 @@ const logger = new CustomLogger();
 // Parse JSON bodies
 app.use(express.json());
 
-// Setup Swagger UI before Reef initialization
-OpenAPIController.setupSwaggerUI(app);
+// Initialize Swagger UI middleware
+app.use('/api/v1/openapi/ui', swaggerUi.serve);
+app.get('/api/v1/openapi/ui', (req, res, next) => {
+  const mapName = req.query.mapName || 'all';
+  const setupHandler = swaggerUi.setup(null, {
+    swaggerOptions: {
+      url: `/api/v1/openapi/json?mapName=${mapName}`
+    }
+  });
+  setupHandler(req, res, next);
+});
 
 // Initialize Reef framework
 const reef = new Reef(app);
