@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "pattern": "**/*.dto.ts",
+      "rules": [
+        "Always use @IsArray() and @ValidateNested() together for array properties",
+        "Always use @Type(() => ClassName) for nested objects and arrays",
+        "Use @JSONSchema decorator to provide description, type, and examples",
+        "For array properties with nested DTOs, specify items with $ref in @JSONSchema",
+        "Follow naming convention: *DtoReq for request DTOs, *DtoRes for response DTOs",
+        "Include status and data fields in response DTOs",
+        "Add @IsString() or appropriate validator for primitive fields"
+      ]
+    },
+    {
+      "pattern": "**/*.controller.ts",
+      "rules": [
+        "Always use reef-framework @Controller decorator to define controllers",
+        "Always use reef-framework method decorators (@Get, @Post, @Put, @Patch, @Delete)",
+        "Always use reef-framework parameter decorators (@Body, @Param, @Query, @Req, @Res)",
+        "Use OpenApi* decorators only for OpenAPI documentation, not for routing",
+        "Never replace reef-framework decorators with OpenApi* decorators",
+        "Use @OpenApiJsonController and other OpenApi* decorators alongside reef-framework decorators",
+        "Import all OpenApi* decorators from src/openapi/decorators.ts, never from routing-controllers directly",
+        "Add @OpenApiControllerDesc with description and tags",
+        "Include @OpenAPI decorator with summary, description, and responses",
+        "Use @OpenApiResponseSchema for response type specification",
+        "Include @OpenApiAuth() for protected endpoints",
+        "Group related endpoints in the same controller",
+        "Follow RESTful naming: GET /, GET /:id, POST /, PUT /:id, DELETE /:id"
+      ]
+    },
+    {
+      "pattern": "**/openapi/**/*.ts",
+      "rules": [
+        "Define all OpenAPI decorators in openapi/decorators.ts",
+        "Prefix all custom decorators with 'OpenApi'",
+        "Use 'openapi:' prefix for all metadata keys",
+        "Export decorators individually (not as a namespace)",
+        "Handle both method and class-level decorators appropriately"
+      ]
+    },
+    {
+      "pattern": "**/index.ts",
+      "rules": [
+        "Register all controllers at startup",
+        "Configure OpenAPI documentation endpoint at /api/v1/openapi/ui",
+        "Set up database connection before starting server",
+        "Use proper error handling for startup sequence",
+        "Configure proper logging levels (DEBUG, INFO)"
+      ]
+    },
+    {
+      "pattern": "src/openapi/generate.ts",
+      "rules": [
+        "Generate OpenAPI specs in JSON format to openapi/*.json",
+        "Ensure all referenced schemas are collected in components.schemas",
+        "Include security schemes from @OpenApiAuth decorators",
+        "Support multiple spec file generation based on controller combinations"
+      ]
+    }
+  ],
+  "ignore": [
+    "node_modules",
+    "dist",
+    "build",
+    ".git",
+    "coverage",
+    "openapi/*.json"
+  ],
+  "settings": {
+    "typescript": {
+      "decoratorStyle": "symbol",
+      "validateDecorators": true
+    },
+    "openapi": {
+      "outputPath": "openapi/",
+      "specVersion": "3.0.0",
+      "validateReferences": true,
+      "validateOutput": {
+        "pattern": "openapi/*.json",
+        "rules": [
+          "Must contain components.schemas for all referenced DTOs",
+          "Must have proper $ref usage in schema references",
+          "Must include security schemes when endpoints use @OpenApiAuth",
+          "Must have complete path documentation for all controller endpoints"
+        ]
+      }
+    }
+  }
+} 
