@@ -53,7 +53,7 @@ export class CreateUsersBulkDtoRes {
   @JSONSchema({
     description: "Array of created users",
     type: "array",
-    items: { $ref: "#/components/schemas/CreateUserDtoRes" },
+    items: { $ref: "#/components/schemas/PostUserResAlias" },
     example: [{
       id: 1,
       email: "user1@example.com",

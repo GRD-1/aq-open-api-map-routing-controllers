@@ -61,7 +61,7 @@ export default class UsersController extends BaseController {
   @OpenApiGet('/')
   @OpenAPI(getAllUsersDescription)
   @OpenApiAuth()
-  @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true })
+  @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true, alias: 'GetUsersResAlias' })
   async getAllUsers(@Req() req: Request, @Res() res: Response) {
     const users = await UserService.getAllItems();
     return {
@@ -75,7 +75,7 @@ export default class UsersController extends BaseController {
   @OpenApiGet('/:id')
   @OpenAPI(getUserByIdDescription)
   @OpenApiAuth()
-  @OpenApiResponseSchema(GetUsersDtoRes)
+  @OpenApiResponseSchema(GetUsersDtoRes, { alias: 'GetUserByIdResAlias' })
   async getUserById(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
       res.status(404).json({
@@ -105,7 +105,7 @@ export default class UsersController extends BaseController {
   @OpenApiPost('/')
   @OpenAPI(createUserDescription)
   @OpenApiAuth()
-  @OpenApiResponseSchema(CreateUserDtoRes)
+  @OpenApiResponseSchema(CreateUserDtoRes, { alias: 'PostUserResAlias' })
   async createUser(
     @Req() req: Request,
     @Res() res: Response,
@@ -126,7 +126,7 @@ export default class UsersController extends BaseController {
   @OpenApiPost('/bulk')
   @OpenAPI(createUsersBulkDescription)
   @OpenApiAuth()
-  @OpenApiResponseSchema(CreateUsersBulkDtoRes)
+  @OpenApiResponseSchema(CreateUsersBulkDtoRes, { alias: 'PostUsersBulkResAlias' })
   async createUsers(
     @Req() req: Request,
     @Res() res: Response,
@@ -145,7 +145,7 @@ export default class UsersController extends BaseController {
   @OpenApiPut('/:id')
   @OpenAPI(updateUserDescription)
   @OpenApiAuth()
-  @OpenApiResponseSchema(GetUsersDtoRes)
+  @OpenApiResponseSchema(GetUsersDtoRes, { alias: 'PutUserResAlias' })
   async updateUser(@Param('id') id: string, @Body() userData: UpdateUserDtoReq, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
       res.status(404).json({
@@ -175,7 +175,7 @@ export default class UsersController extends BaseController {
   @OpenApiPatch('/:id')
   @OpenAPI(patchUserDescription)
   @OpenApiAuth()
-  @OpenApiResponseSchema(GetUsersDtoRes)
+  @OpenApiResponseSchema(GetUsersDtoRes, { alias: 'PatchUserResAlias' })
   async patchUser(
     @Param('id') id: string,
     @Body() userData: Partial<UpdateUserDtoReq>,
@@ -213,7 +213,7 @@ export default class UsersController extends BaseController {
     description: 'Deletes an existing user',
   })
   @OpenApiAuth()
-  @OpenApiResponseSchema(GetUsersDtoRes)
+  @OpenApiResponseSchema(GetUsersDtoRes, { alias: 'DeleteUserResAlias' })
   async deleteUser(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
       res.status(404).json({
@@ -241,7 +241,7 @@ export default class UsersController extends BaseController {
   @Post('/login')
   @OpenApiPost('/login')
   @OpenAPI(loginDescription)
-  @OpenApiResponseSchema(LoginResponseDto)
+  @OpenApiResponseSchema(LoginResponseDto, { alias: 'PostUserLoginResAlias' })
   async login(
     @Body() body: LoginRequestDto
   ) {

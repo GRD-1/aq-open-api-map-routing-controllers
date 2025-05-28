@@ -30,7 +30,26 @@ export const OpenApiRes = Res;
 
 // Export routing-controllers-openapi decorators
 export { OpenAPI };
-export const OpenApiResponseSchema = ResponseSchema;
+
+interface OpenApiResponseSchemaOptions {
+  isArray?: boolean;
+  alias?: string;  // Optional schema alias
+}
+
+export function OpenApiResponseSchema(responseDto: Function, options: OpenApiResponseSchemaOptions = {}) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    // Store the response type for later use
+    Reflect.defineMetadata('routing-controllers:response-type', responseDto, target, propertyKey);
+    
+    // Store the alias in metadata if provided
+    if (options.alias) {
+      Reflect.defineMetadata('openapi:response:alias', options.alias, target, propertyKey);
+    }
+    
+    // Apply the original ResponseSchema decorator
+    return ResponseSchema(responseDto, { isArray: options.isArray })(target, propertyKey, descriptor);
+  };
+}
 
 export interface OpenApiControllerDescOptions {
   description: string;

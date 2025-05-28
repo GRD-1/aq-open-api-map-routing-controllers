@@ -33,6 +33,14 @@ function findSchemaRefs(obj: any, refs: Set<string>) {
     }
   }
   
+  // Handle array items
+  if (obj.items && obj.items.$ref) {
+    const match = obj.items.$ref.match(/#\/components\/schemas\/([^/]+)/);
+    if (match) {
+      refs.add(match[1]);
+    }
+  }
+  
   for (const value of Object.values(obj)) {
     findSchemaRefs(value, refs);
   }
@@ -76,6 +84,34 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
 
   const schemas = validationMetadatasToSchemas() as Record<string, SchemaObject | ReferenceObject>;
   const usedSchemas = new Set<string>();
+  const schemaAliases = new Map<string, string>();
+  const methodSchemaMap = new Map<string, string>();
+  const filteredSchemas: Record<string, SchemaObject | ReferenceObject> = {};
+
+  // First pass: collect all schema aliases and map them to method+schema combinations
+  const responseTypes = new Map<string, Function>();
+  const responseSchemas = new Map<string, SchemaObject | ReferenceObject>();
+
+  config.controllers.forEach(controller => {
+    Object.getOwnPropertyNames(controller.prototype).forEach(methodName => {
+      const alias = Reflect.getMetadata('openapi:response:alias', controller.prototype, methodName);
+      const responseType = Reflect.getMetadata('routing-controllers:response-type', controller.prototype, methodName);
+      if (responseType) {
+        const methodKey = `${controller.name}.${methodName}`;
+        responseTypes.set(methodKey, responseType);
+        if (alias) {
+          methodSchemaMap.set(methodKey, alias);
+          schemaAliases.set(responseType.name, alias);
+          // Add the response type to used schemas
+          usedSchemas.add(responseType.name);
+          // Store the schema for later use
+          if (schemas[responseType.name]) {
+            responseSchemas.set(alias, schemas[responseType.name]);
+          }
+        }
+      }
+    });
+  });
 
   // Generate initial spec with schemas
   const spec = routingControllersToSpec(
@@ -133,17 +169,45 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
             
             const methodName = operation.operationId.split('.').pop();
             if (methodName) {
+              const methodKey = `${controller.name}.${methodName}`;
+              const responseType = responseTypes.get(methodKey);
+              
               // Collect schemas from request body
               if (operation.requestBody?.content?.['application/json']?.schema) {
                 findSchemaRefs(operation.requestBody.content['application/json'].schema, usedSchemas);
               }
 
-              // Collect schemas from responses
+              // Collect schemas from responses and update references
               if (operation.responses) {
                 Object.values(operation.responses).forEach(response => {
                   const res = response as ResponseObject;
                   if (res.content?.['application/json']?.schema) {
                     findSchemaRefs(res.content['application/json'].schema, usedSchemas);
+                    
+                    // Update schema reference if it exists
+                    if (res.content['application/json'].schema.$ref) {
+                      const refMatch = res.content['application/json'].schema.$ref.match(/#\/components\/schemas\/([^/]+)/);
+                      if (refMatch) {
+                        const schemaName = refMatch[1];
+                        const methodAlias = methodSchemaMap.get(methodKey);
+                        if (methodAlias && responseType) {
+                          res.content['application/json'].schema.$ref = `#/components/schemas/${methodAlias}`;
+                        }
+                      }
+                    }
+                    
+                    // Handle array items
+                    const schema = res.content['application/json'].schema as SchemaObject;
+                    if (schema.type === 'array' && schema.items && '$ref' in schema.items) {
+                      const refMatch = schema.items.$ref.match(/#\/components\/schemas\/([^/]+)/);
+                      if (refMatch) {
+                        const schemaName = refMatch[1];
+                        const methodAlias = methodSchemaMap.get(methodKey);
+                        if (methodAlias && responseType) {
+                          schema.items.$ref = `#/components/schemas/${methodAlias}`;
+                        }
+                      }
+                    }
                   }
                 });
               }
@@ -192,12 +256,53 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
     }
   });
 
-  // Filter schemas to only include those that are used
-  const filteredSchemas: Record<string, SchemaObject | ReferenceObject> = {};
+  // Second pass: apply aliases and filter schemas
   for (const [name, schema] of Object.entries(schemas)) {
     if (usedSchemas.has(name)) {
-      filteredSchemas[name] = schema;
+      const aliasName = schemaAliases.get(name) || name;
+      filteredSchemas[aliasName] = schema;
+      
+      // Update references in the entire spec
+      const updateRefs = (obj: any) => {
+        if (!obj || typeof obj !== 'object') return;
+        
+        if (obj.$ref && typeof obj.$ref === 'string') {
+          const refMatch = obj.$ref.match(/#\/components\/schemas\/([^/]+)/);
+          if (refMatch && refMatch[1] === name) {
+            // Find the method context if we're in a path operation
+            let methodAlias = aliasName;
+            if (obj.operationId) {
+              const methodKey = obj.operationId;
+              methodAlias = methodSchemaMap.get(methodKey) || aliasName;
+            }
+            obj.$ref = `#/components/schemas/${methodAlias}`;
+          }
+        }
+        
+        // Handle array items
+        if (obj.type === 'array' && obj.items && '$ref' in obj.items) {
+          const refMatch = obj.items.$ref.match(/#\/components\/schemas\/([^/]+)/);
+          if (refMatch && refMatch[1] === name) {
+            // Find the method context if we're in a path operation
+            let methodAlias = aliasName;
+            if (obj.operationId) {
+              const methodKey = obj.operationId;
+              methodAlias = methodSchemaMap.get(methodKey) || aliasName;
+            }
+            obj.items.$ref = `#/components/schemas/${methodAlias}`;
+          }
+        }
+        
+        Object.values(obj).forEach(value => updateRefs(value));
+      };
+      
+      updateRefs(spec);
     }
+  }
+
+  // Add all response schemas to the filtered schemas
+  for (const [alias, schema] of responseSchemas) {
+    filteredSchemas[alias] = schema;
   }
 
   // Update spec with filtered schemas

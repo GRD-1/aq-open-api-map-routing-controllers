@@ -17,6 +17,8 @@ import { OpenAPI, OpenApiResponseSchema } from '../openapi/decorators';
 @Controller('/customers')
 export default class CustomersController extends BaseController {
   @Get('/')
+  @OpenApiGet('/')
+  @OpenApiResponseSchema(GetCustomersDtoRes, { isArray: true, alias: 'GetCustomersResAlias' })
   async getAllCustomers(@Req() req: Request, @Res() res: Response) {
     const customers = [
       {
@@ -45,7 +47,7 @@ export default class CustomersController extends BaseController {
 
   @OpenApiGet('/:id')
   @OpenAPI(getCustomerByIdDescription)
-  @OpenApiResponseSchema(GetCustomerByIdDtoRes)
+  @OpenApiResponseSchema(GetCustomerByIdDtoRes, { alias: 'GetCustomerByIdResAlias' })
   @Get('/:id')
   async getCustomerById(@Param('id') id: number, @Req() req: Request, @Res() res: Response) {
     const customer = {
@@ -64,6 +66,8 @@ export default class CustomersController extends BaseController {
   }
 
   @Get('/:id/requisites')
+  @OpenApiGet('/:id/requisites')
+  @OpenApiResponseSchema(GetCustomerRequisitesDtoRes, { alias: 'GetCustomerRequisitesResAlias' })
   async getCustomerRequisites(@Param('id') id: number, @Req() req: Request, @Res() res: Response) {
     const requisites = {
       bank_name: 'Example Bank',
