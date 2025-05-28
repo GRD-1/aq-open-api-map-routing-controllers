@@ -26,7 +26,7 @@ export class CreateUsersBulkDtoReq {
   @JSONSchema({
     description: "Array of users to create",
     type: "array",
-    items: { $ref: "#/components/schemas/CreateUserDtoReq" },
+    items: { $ref: "#/components/schemas/PostUserReqAlias" },
     example: [{
       email: "user1@example.com",
       password_hash: "$2b$10$...",

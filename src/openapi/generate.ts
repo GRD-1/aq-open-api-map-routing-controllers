@@ -189,6 +189,7 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
                   operation.requestBody.content['application/json'].schema = {
                     $ref: `#/components/schemas/${requestAlias}`
                   };
+                  operation.requestBody.description = requestAlias;
                 }
                 findSchemaRefs(operation.requestBody.content['application/json'].schema, usedSchemas);
               }
@@ -276,10 +277,43 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
   for (const [name, schema] of Object.entries(schemas)) {
     if (usedSchemas.has(name)) {
       const aliasName = schemaAliases.get(name) || name;
-      filteredSchemas[aliasName] = schema;
+      // Only add to filteredSchemas if it has an alias
+      if (schemaAliases.has(name)) {
+        // Deep clone the schema to avoid modifying the original
+        const clonedSchema = JSON.parse(JSON.stringify(schema));
+        
+        // Update any references within the schema itself
+        const updateRefs = (obj: any) => {
+          if (!obj || typeof obj !== 'object') return;
+          
+          if (obj.$ref && typeof obj.$ref === 'string') {
+            const refMatch = obj.$ref.match(/#\/components\/schemas\/([^/]+)/);
+            if (refMatch) {
+              const referencedName = refMatch[1];
+              const referencedAlias = schemaAliases.get(referencedName) || referencedName;
+              obj.$ref = `#/components/schemas/${referencedAlias}`;
+            }
+          }
+          
+          // Handle array items
+          if (obj.type === 'array' && obj.items && '$ref' in obj.items) {
+            const refMatch = obj.items.$ref.match(/#\/components\/schemas\/([^/]+)/);
+            if (refMatch) {
+              const referencedName = refMatch[1];
+              const referencedAlias = schemaAliases.get(referencedName) || referencedName;
+              obj.items.$ref = `#/components/schemas/${referencedAlias}`;
+            }
+          }
+          
+          Object.values(obj).forEach(value => updateRefs(value));
+        };
+        
+        updateRefs(clonedSchema);
+        filteredSchemas[aliasName] = clonedSchema;
+      }
       
       // Update references in the entire spec
-      const updateRefs = (obj: any) => {
+      const updateSpecRefs = (obj: any) => {
         if (!obj || typeof obj !== 'object') return;
         
         if (obj.$ref && typeof obj.$ref === 'string') {
@@ -309,10 +343,10 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
           }
         }
         
-        Object.values(obj).forEach(value => updateRefs(value));
+        Object.values(obj).forEach(value => updateSpecRefs(value));
       };
       
-      updateRefs(spec);
+      updateSpecRefs(spec);
     }
   }
 
