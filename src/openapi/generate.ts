@@ -94,20 +94,28 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
 
   config.controllers.forEach(controller => {
     Object.getOwnPropertyNames(controller.prototype).forEach(methodName => {
-      const alias = Reflect.getMetadata('openapi:response:alias', controller.prototype, methodName);
+      const responseAlias = Reflect.getMetadata('openapi:response:alias', controller.prototype, methodName);
+      const requestAlias = Reflect.getMetadata('openapi:request:alias', controller.prototype, methodName);
       const responseType = Reflect.getMetadata('routing-controllers:response-type', controller.prototype, methodName);
+      const requestType = Reflect.getMetadata('routing-controllers:request-type', controller.prototype, methodName);
+
       if (responseType) {
         const methodKey = `${controller.name}.${methodName}`;
         responseTypes.set(methodKey, responseType);
-        if (alias) {
-          methodSchemaMap.set(methodKey, alias);
-          schemaAliases.set(responseType.name, alias);
-          // Add the response type to used schemas
+        if (responseAlias) {
+          methodSchemaMap.set(methodKey, responseAlias);
+          schemaAliases.set(responseType.name, responseAlias);
           usedSchemas.add(responseType.name);
-          // Store the schema for later use
           if (schemas[responseType.name]) {
-            responseSchemas.set(alias, schemas[responseType.name]);
+            responseSchemas.set(responseAlias, schemas[responseType.name]);
           }
+        }
+      }
+
+      if (requestType && requestAlias) {
+        usedSchemas.add(requestType.name);
+        if (schemas[requestType.name]) {
+          filteredSchemas[requestAlias] = schemas[requestType.name];
         }
       }
     });
@@ -174,6 +182,14 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
               
               // Collect schemas from request body
               if (operation.requestBody?.content?.['application/json']?.schema) {
+                const requestAlias = Reflect.getMetadata('openapi:request:alias', controller.prototype, methodName);
+                const requestType = Reflect.getMetadata('routing-controllers:request-type', controller.prototype, methodName);
+                
+                if (requestType && requestAlias) {
+                  operation.requestBody.content['application/json'].schema = {
+                    $ref: `#/components/schemas/${requestAlias}`
+                  };
+                }
                 findSchemaRefs(operation.requestBody.content['application/json'].schema, usedSchemas);
               }
 

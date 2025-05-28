@@ -109,10 +109,10 @@ export default class UsersController extends BaseController {
   async createUser(
     @Req() req: Request,
     @Res() res: Response,
-    @Body() email: string, 
-    @Body() password_hash: string, 
-    @Body() name: string, 
-    @OpenApiBody() body: CreateUserDtoReq,
+    @Body() email: string,
+    @Body() password_hash: string,
+    @Body() name: string,
+    @OpenApiBody(CreateUserDtoReq, { alias: 'PostUserReqAlias' }) body: CreateUserDtoReq
   ) {
     const user = await UserService.createItem({ email, password_hash, name });
     return {
@@ -131,7 +131,7 @@ export default class UsersController extends BaseController {
     @Req() req: Request,
     @Res() res: Response,
     @Body() users: CreateUsersBulkDtoReq["users"],
-    @OpenApiBody() body: CreateUsersBulkDtoReq,
+    @OpenApiBody(CreateUsersBulkDtoReq, { alias: 'PostUsersBulkReqAlias' }) body: CreateUsersBulkDtoReq
   ) {
     const createdUsers = await UserService.createBulkItems(users);
     return {

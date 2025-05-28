@@ -23,7 +23,6 @@ export const OpenApiPost = Post;
 export const OpenApiPut = Put;
 export const OpenApiPatch = Patch;
 export const OpenApiDelete = Delete;
-export const OpenApiBody = Body;
 export const OpenApiParam = Param;
 export const OpenApiReq = Req;
 export const OpenApiRes = Res;
@@ -109,5 +108,24 @@ export function OpenApiAuth() {
       Reflect.defineMetadata('openapi', openApi, target);
       return target;
     }
+  };
+}
+
+interface OpenApiBodyOptions {
+  alias?: string;  // Optional schema alias
+}
+
+export function OpenApiBody(dtoClass: Function, options: OpenApiBodyOptions = {}) {
+  return function (target: any, propertyKey: string, parameterIndex: number) {
+    // Store the request type for later use
+    Reflect.defineMetadata('routing-controllers:request-type', dtoClass, target, propertyKey);
+    
+    // Store the alias in metadata if provided
+    if (options.alias) {
+      Reflect.defineMetadata('openapi:request:alias', options.alias, target, propertyKey);
+    }
+    
+    // Apply the original Body decorator
+    return Body()(target, propertyKey, parameterIndex);
   };
 } 
