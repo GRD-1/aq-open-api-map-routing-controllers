@@ -126,7 +126,14 @@ export default class UsersController extends BaseController {
   @OpenApiPost('/bulk')
   @OpenAPI(createUsersBulkDescription)
   @OpenApiAuth()
-  @OpenApiResponseSchema(CreateUsersBulkDtoRes, { alias: 'PostUsersBulkResAlias' })
+  @OpenApiResponseSchema(CreateUsersBulkDtoRes, { 
+    alias: 'PostUsersBulkResAlias',
+    nestedAliases: {
+      'ExtraFields': 'ExtraFieldsAlias',
+      'SuperExtraFields': 'SuperExtraFieldsAlias',
+      'SuperPuperExtraFields': 'SuperPuperExtraFieldsAlias'
+    }
+  })
   async createUsers(
     @Req() req: Request,
     @Res() res: Response,

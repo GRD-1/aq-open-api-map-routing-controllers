@@ -33,6 +33,7 @@ export { OpenAPI };
 interface OpenApiResponseSchemaOptions {
   isArray?: boolean;
   alias?: string;  // Optional schema alias
+  nestedAliases?: Record<string, string>;  // Optional map of nested type names to their aliases
 }
 
 export function OpenApiResponseSchema(responseDto: Function, options: OpenApiResponseSchemaOptions = {}) {
@@ -43,6 +44,11 @@ export function OpenApiResponseSchema(responseDto: Function, options: OpenApiRes
     // Store the alias in metadata if provided
     if (options.alias) {
       Reflect.defineMetadata('openapi:response:alias', options.alias, target, propertyKey);
+    }
+
+    // Store nested aliases in metadata if provided
+    if (options.nestedAliases) {
+      Reflect.defineMetadata('openapi:response:nested-aliases', options.nestedAliases, target, propertyKey);
     }
     
     // Apply the original ResponseSchema decorator

@@ -109,6 +109,7 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
     Object.getOwnPropertyNames(controller.prototype).forEach(methodName => {
       const responseAlias = Reflect.getMetadata('openapi:response:alias', controller.prototype, methodName);
       const requestAlias = Reflect.getMetadata('openapi:request:alias', controller.prototype, methodName);
+      const nestedAliases = (Reflect.getMetadata('openapi:response:nested-aliases', controller.prototype, methodName) || {}) as Record<string, string>;
       const responseType = Reflect.getMetadata('routing-controllers:response-type', controller.prototype, methodName);
       const requestType = Reflect.getMetadata('routing-controllers:request-type', controller.prototype, methodName);
 
@@ -123,6 +124,15 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
             responseSchemas.set(responseAlias, schemas[responseType.name]);
           }
         }
+
+        // Add nested aliases to the schema aliases map
+        Object.entries(nestedAliases).forEach(([typeName, alias]) => {
+          schemaAliases.set(typeName, alias);
+          usedSchemas.add(typeName);
+          if (schemas[typeName]) {
+            responseSchemas.set(alias, schemas[typeName]);
+          }
+        });
       }
 
       if (requestType && requestAlias) {

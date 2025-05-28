@@ -40,20 +40,64 @@ export class CreateUsersBulkDtoReq {
   users: CreateUserDtoReq[];
 }
 
+@JSONSchema({
+  description: "Super puper extra fields object",
+  type: "object",
+  properties: {
+    superPuperExtraFieldOne: {
+      type: "string",
+      description: "First super puper extra field",
+      example: "super puper extra value one"
+    },
+    superPuperExtraFieldTwo: {
+      type: "number",
+      description: "Second super puper extra field",
+      example: 42
+    },
+    superPuperExtraFieldThree: {
+      type: "boolean",
+      description: "Third super puper extra field",
+      example: true
+    }
+  }
+})
 export class SuperPuperExtraFields {
   @IsString()
   @IsOptional()
+  @JSONSchema({
+    description: "First super puper extra field",
+    type: "string",
+    example: "super puper extra value one"
+  })
   superPuperExtraFieldOne: string;
 
   @IsNumber()
   @IsOptional()
+  @JSONSchema({
+    description: "Second super puper extra field",
+    type: "number",
+    example: 42
+  })
   superPuperExtraFieldTwo: number;
 
   @IsBoolean()
   @IsOptional()
+  @JSONSchema({
+    description: "Third super puper extra field",
+    type: "boolean",
+    example: true
+  })
   superPuperExtraFieldThree: boolean;
 }
 
+@JSONSchema({
+  description: "Super extra fields object",
+  properties: {
+    superPuperExtraFields: {
+      $ref: "#/components/schemas/SuperPuperExtraFieldsAlias"
+    }
+  }
+})
 export class SuperExtraFields {
   @IsString()
   @IsOptional()
@@ -63,15 +107,26 @@ export class SuperExtraFields {
   @IsOptional()
   superExtraFieldTwo: number;
 
-  @IsBoolean()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => SuperPuperExtraFields)
   @IsOptional()
   @JSONSchema({
-    description: "Super extra fields object",
-    $ref: "#/components/schemas/SuperPuperExtraFields"
+    description: "Super puper extra fields object",
+    $ref: "#/components/schemas/SuperPuperExtraFieldsAlias"
   })
   superPuperExtraFields: SuperPuperExtraFields;
 }
 
+@JSONSchema({
+  description: "Extra fields object",
+  type: "object",
+  properties: {
+    superExtraFields: {
+      $ref: "#/components/schemas/SuperExtraFieldsAlias"
+    }
+  }
+})
 export class ExtraFields {
   @IsString()
   @IsOptional()
@@ -87,7 +142,7 @@ export class ExtraFields {
   @IsOptional()
   @JSONSchema({
     description: "Super extra fields object",
-    $ref: "#/components/schemas/SuperExtraFields"
+    $ref: "#/components/schemas/SuperExtraFieldsAlias"
   })
   superExtraFields: SuperExtraFields;
 }
@@ -130,7 +185,7 @@ export class CreateUsersBulkDtoRes {
   @IsOptional()
   @JSONSchema({
     description: "Extra fields object",
-    $ref: "#/components/schemas/ExtraFields"
+    $ref: "#/components/schemas/ExtraFieldsAlias"
   })
   extraFields: ExtraFields;
 }
