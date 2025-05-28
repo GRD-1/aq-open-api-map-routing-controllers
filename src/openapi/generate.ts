@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { OpenAPIMapConfig } from './types';
 import { MetadataArgsStorage } from 'routing-controllers';
+import { defaultMetadataStorage } from 'class-transformer/cjs/storage';
 
 interface OpenAPISpec extends OpenAPIObject {
   tags: Array<{ name: string; description: string }>;
@@ -21,6 +22,14 @@ interface OpenAPISpec extends OpenAPIObject {
     };
   };
   components?: ComponentsObject;
+}
+
+interface RefObject {
+  $ref: string;
+}
+
+function isRefObject(value: unknown): value is RefObject {
+  return typeof value === 'object' && value !== null && '$ref' in value && typeof (value as any).$ref === 'string';
 }
 
 function findSchemaRefs(obj: any, refs: Set<string>) {
@@ -82,7 +91,11 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
   newStorage.uses = storage.uses;
   newStorage.useInterceptors = storage.useInterceptors;
 
-  const schemas = validationMetadatasToSchemas() as Record<string, SchemaObject | ReferenceObject>;
+  const schemas = validationMetadatasToSchemas({
+    classTransformerMetadataStorage: defaultMetadataStorage,
+    refPointerPrefix: '#/components/schemas/'
+  }) as Record<string, SchemaObject | ReferenceObject>;
+
   const usedSchemas = new Set<string>();
   const schemaAliases = new Map<string, string>();
   const methodSchemaMap = new Map<string, string>();
@@ -273,89 +286,129 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
     }
   });
 
-  // Second pass: apply aliases and filter schemas
-  for (const [name, schema] of Object.entries(schemas)) {
-    if (usedSchemas.has(name)) {
-      const aliasName = schemaAliases.get(name) || name;
-      // Only add to filteredSchemas if it has an alias
-      if (schemaAliases.has(name)) {
-        // Deep clone the schema to avoid modifying the original
-        const clonedSchema = JSON.parse(JSON.stringify(schema));
-        
-        // Update any references within the schema itself
-        const updateRefs = (obj: any) => {
-          if (!obj || typeof obj !== 'object') return;
-          
-          if (obj.$ref && typeof obj.$ref === 'string') {
-            const refMatch = obj.$ref.match(/#\/components\/schemas\/([^/]+)/);
-            if (refMatch) {
-              const referencedName = refMatch[1];
-              const referencedAlias = schemaAliases.get(referencedName) || referencedName;
-              obj.$ref = `#/components/schemas/${referencedAlias}`;
-            }
+  // Filter and rename schemas
+  const nestedSchemas = new Set<string>();
+
+  // Helper function to check if a schema has nested objects
+  const findAllNestedTypes = (obj: any, foundTypes: Set<string>) => {
+    if (!obj || typeof obj !== 'object') return;
+
+    // Check for class-transformer @Type decorators in metadata
+    if (obj.target && obj.properties) {
+      Object.values(obj.properties).forEach((prop: any) => {
+        if (prop.type && typeof prop.type === 'function') {
+          foundTypes.add(prop.type.name);
+          // Recursively check the nested type's schema
+          if (schemas[prop.type.name]) {
+            findAllNestedTypes(schemas[prop.type.name], foundTypes);
           }
-          
-          // Handle array items
-          if (obj.type === 'array' && obj.items && '$ref' in obj.items) {
-            const refMatch = obj.items.$ref.match(/#\/components\/schemas\/([^/]+)/);
-            if (refMatch) {
-              const referencedName = refMatch[1];
-              const referencedAlias = schemaAliases.get(referencedName) || referencedName;
-              obj.items.$ref = `#/components/schemas/${referencedAlias}`;
-            }
+        }
+      });
+    }
+
+    if (Array.isArray(obj)) {
+      obj.forEach(item => findAllNestedTypes(item, foundTypes));
+      return;
+    }
+
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === '$ref' && typeof value === 'string') {
+        const refName = value.split('/').pop();
+        if (refName) {
+          foundTypes.add(refName);
+          // Recursively check the referenced schema
+          if (schemas[refName]) {
+            findAllNestedTypes(schemas[refName], foundTypes);
           }
-          
-          Object.values(obj).forEach(value => updateRefs(value));
-        };
-        
-        updateRefs(clonedSchema);
-        filteredSchemas[aliasName] = clonedSchema;
+        }
+      } else if (key === 'items' && value && typeof value === 'object' && isRefObject(value)) {
+        const refName = value.$ref.split('/').pop();
+        if (refName) {
+          foundTypes.add(refName);
+          // Recursively check the referenced schema
+          if (schemas[refName]) {
+            findAllNestedTypes(schemas[refName], foundTypes);
+          }
+        }
+      } else if (typeof value === 'object') {
+        findAllNestedTypes(value, foundTypes);
       }
-      
-      // Update references in the entire spec
-      const updateSpecRefs = (obj: any) => {
-        if (!obj || typeof obj !== 'object') return;
-        
-        if (obj.$ref && typeof obj.$ref === 'string') {
-          const refMatch = obj.$ref.match(/#\/components\/schemas\/([^/]+)/);
-          if (refMatch && refMatch[1] === name) {
-            // Find the method context if we're in a path operation
-            let methodAlias = aliasName;
-            if (obj.operationId) {
-              const methodKey = obj.operationId;
-              methodAlias = methodSchemaMap.get(methodKey) || aliasName;
-            }
-            obj.$ref = `#/components/schemas/${methodAlias}`;
-          }
-        }
-        
-        // Handle array items
-        if (obj.type === 'array' && obj.items && '$ref' in obj.items) {
-          const refMatch = obj.items.$ref.match(/#\/components\/schemas\/([^/]+)/);
-          if (refMatch && refMatch[1] === name) {
-            // Find the method context if we're in a path operation
-            let methodAlias = aliasName;
-            if (obj.operationId) {
-              const methodKey = obj.operationId;
-              methodAlias = methodSchemaMap.get(methodKey) || aliasName;
-            }
-            obj.items.$ref = `#/components/schemas/${methodAlias}`;
-          }
-        }
-        
-        Object.values(obj).forEach(value => updateSpecRefs(value));
-      };
-      
-      updateSpecRefs(spec);
+    }
+  };
+
+  // First pass: collect all schema references and their nested types
+  for (const [name, schema] of Object.entries(schemas)) {
+    if (schemaAliases.get(name)) {
+      const foundTypes = new Set<string>();
+      findAllNestedTypes(schema, foundTypes);
+      foundTypes.forEach(type => nestedSchemas.add(type));
     }
   }
 
-  // Add all response schemas to the filtered schemas
-  for (const [alias, schema] of responseSchemas) {
-    filteredSchemas[alias] = schema;
+  // Second pass: include all schemas that are either aliased or referenced
+  for (const [name, schema] of Object.entries(schemas)) {
+    if (schemaAliases.get(name) || nestedSchemas.has(name)) {
+      const alias = schemaAliases.get(name) || name;
+      const clonedSchema = JSON.parse(JSON.stringify(schema));
+      
+      // Update references in the schema
+      const updateRefs = (obj: any) => {
+        if (!obj || typeof obj !== 'object') return;
+        
+        if (Array.isArray(obj)) {
+          obj.forEach(item => updateRefs(item));
+          return;
+        }
+        
+        for (const [key, value] of Object.entries(obj)) {
+          if (key === '$ref' && typeof value === 'string') {
+            const refName = value.split('/').pop();
+            if (refName && schemaAliases.get(refName)) {
+              obj[key] = value.replace(refName, schemaAliases.get(refName) || refName);
+            }
+          } else if (key === 'items' && value && typeof value === 'object' && isRefObject(value)) {
+            const refName = value.$ref.split('/').pop();
+            if (refName && schemaAliases.get(refName)) {
+              value.$ref = value.$ref.replace(refName, schemaAliases.get(refName) || refName);
+            }
+          } else if (typeof value === 'object') {
+            updateRefs(value);
+          }
+        }
+      };
+      
+      updateRefs(clonedSchema);
+      filteredSchemas[alias] = clonedSchema;
+    }
   }
 
-  // Update spec with filtered schemas
+  // Update all references in the spec
+  const updateAllRefs = (obj: any) => {
+    if (!obj || typeof obj !== 'object') return;
+    
+    if (Array.isArray(obj)) {
+      obj.forEach(item => updateAllRefs(item));
+      return;
+    }
+    
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === '$ref' && typeof value === 'string') {
+        const refName = value.split('/').pop();
+        if (refName && schemaAliases.get(refName)) {
+          obj[key] = value.replace(refName, schemaAliases.get(refName) || refName);
+        }
+      } else if (key === 'items' && value && typeof value === 'object' && isRefObject(value)) {
+        const refName = value.$ref.split('/').pop();
+        if (refName && schemaAliases.get(refName)) {
+          value.$ref = value.$ref.replace(refName, schemaAliases.get(refName) || refName);
+        }
+      } else if (typeof value === 'object') {
+        updateAllRefs(value);
+      }
+    }
+  };
+
+  updateAllRefs(spec);
   spec.components = spec.components || {};
   spec.components.schemas = filteredSchemas;
 

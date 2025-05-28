@@ -1,4 +1,4 @@
-import { IsArray, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { JSONSchema } from 'class-validator-jsonschema';
 import { CreateUserDtoReq, CreateUserDtoRes } from './create-user.dto';
@@ -40,6 +40,58 @@ export class CreateUsersBulkDtoReq {
   users: CreateUserDtoReq[];
 }
 
+export class SuperPuperExtraFields {
+  @IsString()
+  @IsOptional()
+  superPuperExtraFieldOne: string;
+
+  @IsNumber()
+  @IsOptional()
+  superPuperExtraFieldTwo: number;
+
+  @IsBoolean()
+  @IsOptional()
+  superPuperExtraFieldThree: boolean;
+}
+
+export class SuperExtraFields {
+  @IsString()
+  @IsOptional()
+  superExtraFieldOne: string;
+
+  @IsNumber()
+  @IsOptional()
+  superExtraFieldTwo: number;
+
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchema({
+    description: "Super extra fields object",
+    $ref: "#/components/schemas/SuperPuperExtraFields"
+  })
+  superPuperExtraFields: SuperPuperExtraFields;
+}
+
+export class ExtraFields {
+  @IsString()
+  @IsOptional()
+  extraFieldOne: string;
+
+  @IsNumber()
+  @IsOptional()
+  extraFieldTwo: number;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => SuperExtraFields)
+  @IsOptional()
+  @JSONSchema({
+    description: "Super extra fields object",
+    $ref: "#/components/schemas/SuperExtraFields"
+  })
+  superExtraFields: SuperExtraFields;
+}
+
 export class CreateUsersBulkDtoRes {
   @JSONSchema({
     description: "Operation status",
@@ -71,4 +123,14 @@ export class CreateUsersBulkDtoRes {
     }]
   })
   data: CreateUserDtoRes[];
-} 
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => ExtraFields)
+  @IsOptional()
+  @JSONSchema({
+    description: "Extra fields object",
+    $ref: "#/components/schemas/ExtraFields"
+  })
+  extraFields: ExtraFields;
+}
