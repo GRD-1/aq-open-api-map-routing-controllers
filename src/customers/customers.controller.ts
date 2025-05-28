@@ -1,8 +1,13 @@
 import { Request, Response } from 'express';
 import { BaseController, Controller, Get, Req, Res, Param } from 'reef-framework';
-import { GetCustomersDtoRes, GetCustomerByIdDtoRes, GetCustomerRequisitesDtoRes } from './dto';
+import { 
+  GetCustomersDtoRes, 
+  GetCustomerByIdDtoRes, 
+  GetCustomerRequisitesDtoRes,
+  getCustomerByIdDescription,
+} from './dto';
 import { OpenApiControllerDesc, OpenApiGet, OpenApiJsonController } from '../openapi/decorators';
-import { OpenApiResponseSchema } from '../openapi/decorators';
+import { OpenAPI, OpenApiResponseSchema } from '../openapi/decorators';
 
 @OpenApiJsonController('/customers')
 @OpenApiControllerDesc({
@@ -38,7 +43,8 @@ export default class CustomersController extends BaseController {
     };
   }
 
-  @OpenApiGet('/')
+  @OpenApiGet('/:id')
+  @OpenAPI(getCustomerByIdDescription)
   @OpenApiResponseSchema(GetCustomerByIdDtoRes)
   @Get('/:id')
   async getCustomerById(@Param('id') id: number, @Req() req: Request, @Res() res: Response) {

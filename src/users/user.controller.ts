@@ -16,9 +16,30 @@ import {
   OpenApiAuth
 } from '../openapi/decorators';
 import { OpenApiControllerDesc } from '../openapi/decorators';
-import { CreateUserDtoReq, UpdateUserDtoReq, GetUsersDtoRes, GetUsersDtoReq, CreateUserDtoRes } from './dto';
-import { CreateUsersBulkDtoReq, CreateUsersBulkDtoRes } from './dto/create-users.dto';
-import { LoginRequestDto, LoginResponseDto } from './dto/login.dto';
+import { 
+  CreateUserDtoReq, 
+  UpdateUserDtoReq, 
+  GetUsersDtoRes, 
+  GetUsersDtoReq, 
+  CreateUserDtoRes,
+  getAllUsersDescription,
+  getUserByIdDescription,
+  createUserDescription
+} from './dto';
+import { 
+  CreateUsersBulkDtoReq, 
+  CreateUsersBulkDtoRes,
+  createUsersBulkDescription 
+} from './dto/create-users.dto';
+import { 
+  LoginRequestDto, 
+  LoginResponseDto,
+  loginDescription 
+} from './dto/login.dto';
+import { 
+  updateUserDescription,
+  patchUserDescription 
+} from './dto/update-user.dto';
 import { BaseController, Controller, Get, Post, Put, Patch, Delete, Body, Param, Req, Res } from 'reef-framework';
 import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedError } from '../errors/api.error';
 import { Auth } from '../decorators/auth.decorator';
@@ -38,10 +59,7 @@ export default class UsersController extends BaseController {
   @Get('/')
   @Auth()
   @OpenApiGet('/')
-  @OpenAPI({
-    summary: 'Get all users',
-    description: 'Retrieves a list of all users in the system'
-  })
+  @OpenAPI(getAllUsersDescription)
   @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true })
   async getAllUsers(@Req() req: Request, @Res() res: Response) {
@@ -55,16 +73,7 @@ export default class UsersController extends BaseController {
   @Get('/:id')
   @Auth()
   @OpenApiGet('/:id')
-  @OpenAPI({
-    summary: 'Get user by ID',
-    description: 'Retrieves a specific user by their ID',
-    parameters: [{
-      in: 'path',
-      name: 'id',
-      required: true,
-      schema: { type: 'number' }
-    }]
-  })
+  @OpenAPI(getUserByIdDescription)
   @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes)
   async getUserById(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
@@ -94,18 +103,7 @@ export default class UsersController extends BaseController {
   @Post('/')
   @Auth()
   @OpenApiPost('/')
-  @OpenAPI({
-    summary: 'Create a new user',
-    description: 'Creates a new user with the provided data',
-    responses: {
-      '400': {
-        description: 'Bad Request',
-      },
-      '403': {
-        description: 'Forbidden',
-      }
-    }
-  })
+  @OpenAPI(createUserDescription)
   @OpenApiAuth()
   @OpenApiResponseSchema(CreateUserDtoRes)
   async createUser(
@@ -126,21 +124,7 @@ export default class UsersController extends BaseController {
   @Post('/bulk')
   @Auth()
   @OpenApiPost('/bulk')
-  @OpenAPI({
-    summary: 'Create multiple users',
-    description: 'Creates multiple users in a single request',
-    responses: {
-      '400': {
-        description: 'Bad Request - Invalid input data',
-      },
-      '403': {
-        description: 'Forbidden',
-      },
-      '409': {
-        description: 'Conflict - One or more users with these emails already exist',
-      }
-    }
-  })
+  @OpenAPI(createUsersBulkDescription)
   @OpenApiAuth()
   @OpenApiResponseSchema(CreateUsersBulkDtoRes)
   async createUsers(
@@ -159,16 +143,7 @@ export default class UsersController extends BaseController {
   @Put('/:id')
   @Auth()
   @OpenApiPut('/:id')
-  @OpenAPI({
-    summary: 'Update a user',
-    description: 'Updates an existing user with the provided data',
-    parameters: [{
-      in: 'path',
-      name: 'id',
-      required: true,
-      schema: { type: 'number' }
-    }]
-  })
+  @OpenAPI(updateUserDescription)
   @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes)
   async updateUser(@Param('id') id: string, @Body() userData: UpdateUserDtoReq, @Req() req: Request, @Res() res: Response) {
@@ -198,16 +173,7 @@ export default class UsersController extends BaseController {
   @Patch('/:id')
   @Auth()
   @OpenApiPatch('/:id')
-  @OpenAPI({
-    summary: 'Partially update a user',
-    description: 'Updates specific fields of an existing user',
-    parameters: [{
-      in: 'path',
-      name: 'id',
-      required: true,
-      schema: { type: 'number' }
-    }]
-  })
+  @OpenAPI(patchUserDescription)
   @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes)
   async patchUser(
@@ -274,11 +240,7 @@ export default class UsersController extends BaseController {
 
   @Post('/login')
   @OpenApiPost('/login')
-  @OpenAPI({
-    summary: 'Login user',
-    description: 'Authenticates a user and returns access and refresh tokens',
-  })
-  @OpenApiBody()
+  @OpenAPI(loginDescription)
   @OpenApiResponseSchema(LoginResponseDto)
   async login(
     @Body() body: LoginRequestDto

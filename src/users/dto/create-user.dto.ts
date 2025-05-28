@@ -1,6 +1,19 @@
 import { IsString, IsEmail, IsNumber, IsDate, IsOptional } from 'class-validator';
 import { JSONSchema } from 'class-validator-jsonschema';
 
+export const createUserDescription = {
+  summary: 'Create a new user',
+  description: 'Creates a new user with the provided data',
+  responses: {
+    '400': {
+      description: 'Bad Request',
+    },
+    '403': {
+      description: 'Forbidden',
+    }
+  }
+};
+
 export class CreateUserDtoReq {
   @IsString()
   @IsEmail()

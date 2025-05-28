@@ -1,5 +1,28 @@
 import { IsString, IsEmail, IsOptional, IsNumber, IsDate } from 'class-validator';
 import { JSONSchema } from 'class-validator-jsonschema';
+import { ParameterLocation } from 'openapi3-ts';
+
+export const updateUserDescription = {
+  summary: 'Update a user',
+  description: 'Updates an existing user with the provided data',
+  parameters: [{
+    in: 'path' as ParameterLocation,
+    name: 'id',
+    required: true,
+    schema: { type: 'number' as const }
+  }]
+};
+
+export const patchUserDescription = {
+  summary: 'Partially update a user',
+  description: 'Updates specific fields of an existing user',
+  parameters: [{
+    in: 'path' as ParameterLocation,
+    name: 'id',
+    required: true,
+    schema: { type: 'number' as const }
+  }]
+};
 
 export class UpdateUserDtoReq {
   @IsString()

@@ -7,7 +7,7 @@ import {
   OpenApiAuth,
 } from '../openapi/decorators';
 import { OpenApiControllerDesc } from '../openapi/decorators';
-import { GetThingsDtoRes } from './dto';
+import { GetThingsDtoRes, getAllThingsDescription } from './dto';
 import { BaseController, Controller, Get, Req, Res } from 'reef-framework';
 
 @OpenApiJsonController('/things')
@@ -19,10 +19,7 @@ import { BaseController, Controller, Get, Req, Res } from 'reef-framework';
 export default class ThingsController extends BaseController {
   @Get('/')
   @OpenApiGet('/')
-  @OpenAPI({
-    summary: 'Get all things',
-    description: 'Retrieves a list of all things in the system'
-  })
+  @OpenAPI(getAllThingsDescription)
   @OpenApiResponseSchema(GetThingsDtoRes, { isArray: true })
   async getAllThings(@Req() req: Request, @Res() res: Response) {
     const things = [

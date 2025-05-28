@@ -1,6 +1,16 @@
 import { IsString, IsEmail, IsNumber } from 'class-validator';
 import { JSONSchema } from 'class-validator-jsonschema';
 
+export const loginDescription = {
+  summary: 'User login',
+  description: 'Authenticates a user and returns access tokens',
+  responses: {
+    '401': {
+      description: 'Unauthorized - Invalid credentials',
+    }
+  }
+};
+
 export class LoginRequestDto {
   @IsString()
   @IsEmail()

@@ -1,6 +1,11 @@
 import { IsString, IsNumber, IsDate } from 'class-validator';
 import { OpenAPI } from 'routing-controllers-openapi';
 
+export const getAllThingsDescription = {
+  summary: 'Get all things',
+  description: 'Retrieves a list of all things in the system'
+};
+
 export class GetThingsDtoRes {
   @IsNumber()
   id: number;

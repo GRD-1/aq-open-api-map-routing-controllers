@@ -1,5 +1,22 @@
 import { IsString, IsEmail, IsNumber, IsDate, IsOptional } from 'class-validator';
 import { JSONSchema } from 'class-validator-jsonschema';
+import { ParameterLocation } from 'openapi3-ts';
+
+export const getAllUsersDescription = {
+  summary: 'Get all users',
+  description: 'Retrieves a list of all users in the system'
+};
+
+export const getUserByIdDescription = {
+  summary: 'Get user by ID',
+  description: 'Retrieves a specific user by their ID',
+  parameters: [{
+    in: 'path' as ParameterLocation,
+    name: 'id',
+    required: true,
+    schema: { type: 'number' as const }
+  }]
+};
 
 export class GetUsersDtoReq {
   @IsNumber()

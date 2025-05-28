@@ -3,6 +3,22 @@ import { Type } from 'class-transformer';
 import { JSONSchema } from 'class-validator-jsonschema';
 import { CreateUserDtoReq, CreateUserDtoRes } from './create-user.dto';
 
+export const createUsersBulkDescription = {
+  summary: 'Create multiple users',
+  description: 'Creates multiple users in a single request',
+  responses: {
+    '400': {
+      description: 'Bad Request - Invalid input data',
+    },
+    '403': {
+      description: 'Forbidden',
+    },
+    '409': {
+      description: 'Conflict - One or more users with these emails already exist',
+    }
+  }
+};
+
 export class CreateUsersBulkDtoReq {
   @IsArray()
   @ValidateNested({ each: true })
