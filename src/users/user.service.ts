@@ -4,11 +4,23 @@ import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedEr
 import { v4 as uuidv4 } from 'uuid';
 import { Optional } from 'sequelize';
 import { CreateUsersBulkDtoReq } from './dto/create-users.dto';
-
+import { Op } from 'sequelize';
 export default class UserService {
-  static async getAllItems(): Promise<GetUsersDtoRes[]> {
+  static async getAllItems(args: { name?: string, email?: string }): Promise<GetUsersDtoRes[]> {
+    const { name, email } = args;
+
     try {
-      const users = await User.findAll();
+      const users = await User.findAll({
+        where: {
+          name: {
+            [Op.like]: `%${name}%`
+          },
+          email: {
+            [Op.like]: `%${email}%`
+          }
+        }
+      });
+
       return users.map((user: User) => ({
         id: user.id,
         email: user.email,

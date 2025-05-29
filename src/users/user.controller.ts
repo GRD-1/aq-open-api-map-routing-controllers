@@ -41,7 +41,7 @@ import {
   updateUserDescription,
   patchUserDescription 
 } from './dto/update-user.dto';
-import { BaseController, Controller, Get, Post, Put, Patch, Delete, Body, Param, Req, Res } from 'reef-framework';
+import { BaseController, Controller, Get, Post, Put, Patch, Delete, Body, Param, Req, Res, Query } from 'reef-framework';
 import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedError } from '../errors/api.error';
 import { Auth } from '../decorators/auth.decorator';
 import { JsonController, OnUndefined, HttpCode } from 'routing-controllers';
@@ -62,14 +62,15 @@ export default class UsersController extends BaseController {
   @OpenApiGet('/')
   @OpenAPI(getAllUsersDescription)
   @OpenApiAuth()
-  @OpenApiResponseSchema(GetUsersDtoRes, { 
-    isArray: true, 
-    aliases: {
-      'GetUsersDtoRes': 'GetUsersResAlias'
-    }
-  })
-  async getAllUsers(@Req() req: Request, @Res() res: Response) {
-    const users = await UserService.getAllItems();
+  @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true, aliases: { 'GetUsersDtoRes': 'GetUsersResAlias' }})
+  async getAllUsers(
+    @Req() req: Request, 
+    @Res() res: Response,
+    @Query() name?: string,
+    @Query() email?: string
+  ) {
+    const users = await UserService.getAllItems({ name, email });
+
     return {
       status: 'success',
       data: users
