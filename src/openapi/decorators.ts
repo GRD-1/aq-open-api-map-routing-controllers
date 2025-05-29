@@ -32,8 +32,7 @@ export { OpenAPI };
 
 interface OpenApiResponseSchemaOptions {
   isArray?: boolean;
-  alias?: string;  // Optional schema alias
-  nestedAliases?: Record<string, string>;  // Optional map of nested type names to their aliases
+  aliases?: Record<string, string>;  // Map of type names to their aliases (including main type and nested types)
 }
 
 export function OpenApiResponseSchema(responseDto: Function, options: OpenApiResponseSchemaOptions = {}) {
@@ -41,14 +40,9 @@ export function OpenApiResponseSchema(responseDto: Function, options: OpenApiRes
     // Store the response type for later use
     Reflect.defineMetadata('routing-controllers:response-type', responseDto, target, propertyKey);
     
-    // Store the alias in metadata if provided
-    if (options.alias) {
-      Reflect.defineMetadata('openapi:response:alias', options.alias, target, propertyKey);
-    }
-
-    // Store nested aliases in metadata if provided
-    if (options.nestedAliases) {
-      Reflect.defineMetadata('openapi:response:nested-aliases', options.nestedAliases, target, propertyKey);
+    // Store aliases in metadata if provided
+    if (options.aliases) {
+      Reflect.defineMetadata('openapi:response:aliases', options.aliases, target, propertyKey);
     }
     
     // Apply the original ResponseSchema decorator
@@ -118,7 +112,7 @@ export function OpenApiAuth() {
 }
 
 interface OpenApiBodyOptions {
-  alias?: string;  // Optional schema alias
+  aliases?: Record<string, string>;  // Map of type names to their aliases (including main type and nested types)
 }
 
 export function OpenApiBody(dtoClass: Function, options: OpenApiBodyOptions = {}) {
@@ -126,9 +120,9 @@ export function OpenApiBody(dtoClass: Function, options: OpenApiBodyOptions = {}
     // Store the request type for later use
     Reflect.defineMetadata('routing-controllers:request-type', dtoClass, target, propertyKey);
     
-    // Store the alias in metadata if provided
-    if (options.alias) {
-      Reflect.defineMetadata('openapi:request:alias', options.alias, target, propertyKey);
+    // Store aliases in metadata if provided
+    if (options.aliases) {
+      Reflect.defineMetadata('openapi:request:aliases', options.aliases, target, propertyKey);
     }
     
     // Apply the original Body decorator

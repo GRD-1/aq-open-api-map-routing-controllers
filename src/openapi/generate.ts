@@ -107,26 +107,17 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
 
   config.controllers.forEach(controller => {
     Object.getOwnPropertyNames(controller.prototype).forEach(methodName => {
-      const responseAlias = Reflect.getMetadata('openapi:response:alias', controller.prototype, methodName);
-      const requestAlias = Reflect.getMetadata('openapi:request:alias', controller.prototype, methodName);
-      const nestedAliases = (Reflect.getMetadata('openapi:response:nested-aliases', controller.prototype, methodName) || {}) as Record<string, string>;
+      const responseAliases = (Reflect.getMetadata('openapi:response:aliases', controller.prototype, methodName) || {}) as Record<string, string>;
+      const requestAliases = (Reflect.getMetadata('openapi:request:aliases', controller.prototype, methodName) || {}) as Record<string, string>;
       const responseType = Reflect.getMetadata('routing-controllers:response-type', controller.prototype, methodName);
       const requestType = Reflect.getMetadata('routing-controllers:request-type', controller.prototype, methodName);
 
       if (responseType) {
         const methodKey = `${controller.name}.${methodName}`;
         responseTypes.set(methodKey, responseType);
-        if (responseAlias) {
-          methodSchemaMap.set(methodKey, responseAlias);
-          schemaAliases.set(responseType.name, responseAlias);
-          usedSchemas.add(responseType.name);
-          if (schemas[responseType.name]) {
-            responseSchemas.set(responseAlias, schemas[responseType.name]);
-          }
-        }
 
-        // Add nested aliases to the schema aliases map
-        Object.entries(nestedAliases).forEach(([typeName, alias]) => {
+        // Add response aliases to the schema aliases map
+        Object.entries(responseAliases).forEach(([typeName, alias]) => {
           schemaAliases.set(typeName, alias);
           usedSchemas.add(typeName);
           if (schemas[typeName]) {
@@ -135,11 +126,15 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
         });
       }
 
-      if (requestType && requestAlias) {
-        usedSchemas.add(requestType.name);
-        if (schemas[requestType.name]) {
-          filteredSchemas[requestAlias] = schemas[requestType.name];
-        }
+      if (requestType) {
+        // Add request aliases to the schema aliases map
+        Object.entries(requestAliases).forEach(([typeName, alias]) => {
+          schemaAliases.set(typeName, alias);
+          usedSchemas.add(typeName);
+          if (schemas[typeName]) {
+            filteredSchemas[alias] = schemas[typeName];
+          }
+        });
       }
     });
   });

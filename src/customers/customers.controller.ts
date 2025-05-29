@@ -20,9 +20,9 @@ export default class CustomersController extends BaseController {
   @OpenApiGet('/')
   @OpenApiResponseSchema(GetCustomersDtoRes, { 
     isArray: true,
-    alias: 'GetCustomersResAlias',
-    nestedAliases: {
-      'NestedCustomerFields': 'NestedCustomerFieldsAlias',
+    aliases: {
+      'GetCustomersDtoRes': 'GetCustomersResAlias',
+      'NestedCustomerFields': 'NestedCustomerFieldsAlias'
     }
   })
   async getAllCustomers(@Req() req: Request, @Res() res: Response) {
@@ -53,7 +53,11 @@ export default class CustomersController extends BaseController {
 
   @OpenApiGet('/:id')
   @OpenAPI(getCustomerByIdDescription)
-  @OpenApiResponseSchema(GetCustomerByIdDtoRes, { alias: 'GetCustomerByIdResAlias' })
+  @OpenApiResponseSchema(GetCustomerByIdDtoRes, { 
+    aliases: {
+      'GetCustomerByIdDtoRes': 'GetCustomerByIdResAlias'
+    }
+  })
   @Get('/:id')
   async getCustomerById(@Param('id') id: number, @Req() req: Request, @Res() res: Response) {
     const customer = {
@@ -73,7 +77,11 @@ export default class CustomersController extends BaseController {
 
   @Get('/:id/requisites')
   @OpenApiGet('/:id/requisites')
-  @OpenApiResponseSchema(GetCustomerRequisitesDtoRes, { alias: 'GetCustomerRequisitesResAlias' })
+  @OpenApiResponseSchema(GetCustomerRequisitesDtoRes, { 
+    aliases: {
+      'GetCustomerRequisitesDtoRes': 'GetCustomerRequisitesResAlias'
+    }
+  })
   async getCustomerRequisites(@Param('id') id: number, @Req() req: Request, @Res() res: Response) {
     const requisites = {
       bank_name: 'Example Bank',

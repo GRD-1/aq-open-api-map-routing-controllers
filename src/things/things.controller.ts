@@ -20,7 +20,12 @@ export default class ThingsController extends BaseController {
   @Get('/')
   @OpenApiGet('/')
   @OpenAPI(getAllThingsDescription)
-  @OpenApiResponseSchema(GetThingsDtoRes, { isArray: true, alias: 'GetThingsResAlias' })
+  @OpenApiResponseSchema(GetThingsDtoRes, { 
+    isArray: true, 
+    aliases: {
+      'GetThingsDtoRes': 'GetThingsResAlias'
+    }
+  })
   async getAllThings(@Req() req: Request, @Res() res: Response) {
     const things = [
       {
