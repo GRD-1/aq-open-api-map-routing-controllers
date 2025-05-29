@@ -133,6 +133,8 @@ src/
 
 - `@OpenApiRes()`                           - Marks parameter as Express Response object
 
+- `@OpenApiQueryParams()`                   - Defines query parameters using a DTO class
+
 
 ### Usage Example
 
