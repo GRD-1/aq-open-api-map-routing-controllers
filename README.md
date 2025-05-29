@@ -9,11 +9,13 @@ A Node.js application that demonstrates the implementation of OpenAPI documentat
   - [Overview](#overview)
   - [Feature structure](#feature-structure)
   - [Decorators](#decorators)
+  - [Usage](#usage)
+    - [Usage in controller](#usage-in-controller)
+    - [Usage in DTOs](#usage-in-dtos)
+    - [Nested objects in DTO](#nested-objects-in-dto)
   - [Configs](#configs)
     - [Available Maps](#available-maps)
     - [Creating a New Map](#creating-a-new-map)
-  - [Usage Example](#usage-example)
-    - [Nested objects in DTO](#nested-objects-in-dto)
   - [Working with Documentation](#working-with-documentation)
   - [References](#references)
 
@@ -136,7 +138,9 @@ src/
 - `@OpenApiQueryParams()`                   - Defines query parameters using a DTO class
 
 
-### Usage Example
+### Usage
+
+#### Usage in controller
 
 ```typescript
 @OpenApiJsonController('/users')                    // Base path for all controller endpoints
@@ -173,13 +177,55 @@ export class UsersController {
 }
 ```
 
-### Nested objects in DTO
+#### Usage in DTOs
+
+When creating DTOs, it is necessary to type each field using `class-validator` decorators. The library `class-validator-jsonschema` is used to extract metadata for OpenAPI documentation, but it can only extract this metadata if the fields in DTO have validation decorators from `class-validator`.
+
+Required decorators for proper OpenAPI documentation:
+- `@IsString()`
+- `@IsEmail()`
+- `@IsNumber()`
+- `@IsDate()`
+- `@IsBoolean()`
+- etc.
+
+Example:
+```typescript
+import { IsString, IsEmail, IsOptional } from 'class-validator';
+import { JSONSchema } from 'class-validator-jsonschema';
+
+export class CreateUserDtoReq {
+  @IsString()
+  @JSONSchema({
+    description: 'User full name',
+    example: 'John Doe'
+  })
+  name: string;
+
+  @IsEmail()
+  @JSONSchema({
+    description: 'User email address',
+    example: 'john@example.com'
+  })
+  email: string;
+
+  @IsOptional()
+  @IsString()
+  @JSONSchema({
+    description: 'Additional user information',
+    example: 'Preferred contact time: evening'
+  })
+  notes?: string;
+}
+```
+
+#### Nested objects in DTO
 
 When working with DTOs that contain nested objects, you need to properly decorate them to ensure they appear correctly in the generated OpenAPI documentation:
 
 ```typescript
 import { Type } from 'class-transformer';
-import { ValidateNested, IsArray } from 'class-validator';
+import { IsString, IsArray, ValidateNested } from 'class-validator';
 import { JSONSchema } from 'class-validator-jsonschema';
 
 // Nested DTO
@@ -187,14 +233,16 @@ export class UserProfile {
   @IsString()
   @JSONSchema({
     description: 'User first name',
-    example: 'John'
+    example: 'John',
+    type: 'string'
   })
   firstName: string;
 
   @IsString()
   @JSONSchema({
     description: 'User last name',
-    example: 'Doe'
+    example: 'Doe',
+    type: 'string'
   })
   lastName: string;
 }
@@ -204,28 +252,50 @@ export class UpdateUserDtoReq {
   @ValidateNested()                           // Required for nested validation
   @Type(() => UserProfile)                    // Required for proper transformation
   @JSONSchema({
-    description: 'User profile information'
+    description: 'User profile information',
+    type: 'object',
+    $ref: '#/components/schemas/UserProfile'
   })
   profile: UserProfile;
 
   @IsArray()                                  // Required for arrays
-  @ValidateNested({ each: true })            // Required for array of objects
+  @ValidateNested({ each: true })            // Required for array validation
   @Type(() => UserProfile)                    // Required for array transformation
   @JSONSchema({
-    description: 'Additional profiles',
-    items: { $ref: '#/components/schemas/UserProfile' }  // Reference to nested schema
+    description: 'Additional user profiles',
+    type: 'array',
+    items: { 
+      $ref: '#/components/schemas/UserProfile'
+    },
+    example: [{
+      firstName: 'Jane',
+      lastName: 'Smith'
+    }]
   })
   additionalProfiles: UserProfile[];
 }
 ```
 
 If you use aliases for DTO objects you need to replace the original types with the aliases: 
-- `@Type(() => UserProfileAlias)`
-- `@JSONSchema({
-    description: 'Additional profiles',
-    items: { $ref: '#/components/schemas/UserProfileAlias' }
-  })`
+- Replace `@Type(() => UserProfile)` with `@Type(() => UserProfileAlias)`
+- Replace schema references:
+```typescript
+@JSONSchema({
+  description: 'User profile information',
+  type: 'object',
+  $ref: '#/components/schemas/UserProfileAlias'  // Use alias in schema reference
+})
 
+@JSONSchema({
+  description: 'Additional user profiles',
+  type: 'array',
+  items: { 
+    $ref: '#/components/schemas/UserProfileAlias'  // Use alias in items reference
+  }
+})
+```
+
+Then provide the aliases in the controller:
 ```typescript
 @OpenApiResponseSchema(UpdateUserDtoReq, {
   aliases: {

@@ -252,8 +252,8 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
       }
 
       // Process each method in the controller
-      Object.entries(spec.paths || {}).forEach(([path, pathItem]) => {
-        Object.entries(pathItem).forEach(([method, operation]) => {
+      Object.entries(spec.paths || {}).forEach(([, pathItem]) => {
+        Object.entries(pathItem).forEach(([, operation]) => {
           if (operation.operationId?.startsWith(controller.name + '.')) {
             operation.tags = [tagName];
             
@@ -287,7 +287,7 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
                     if (res.content['application/json'].schema.$ref) {
                       const refMatch = res.content['application/json'].schema.$ref.match(/#\/components\/schemas\/([^/]+)/);
                       if (refMatch) {
-                        const schemaName = refMatch[1];
+                        // const schemaName = refMatch[1];
                         const methodAlias = methodSchemaMap.get(methodKey);
                         if (methodAlias && responseType) {
                           res.content['application/json'].schema.$ref = `#/components/schemas/${methodAlias}`;
@@ -300,7 +300,7 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
                     if (schema.type === 'array' && schema.items && '$ref' in schema.items) {
                       const refMatch = schema.items.$ref.match(/#\/components\/schemas\/([^/]+)/);
                       if (refMatch) {
-                        const schemaName = refMatch[1];
+                        // const schemaName = refMatch[1];
                         const methodAlias = methodSchemaMap.get(methodKey);
                         if (methodAlias && responseType) {
                           schema.items.$ref = `#/components/schemas/${methodAlias}`;
