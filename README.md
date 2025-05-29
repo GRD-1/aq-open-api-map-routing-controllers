@@ -217,8 +217,9 @@ export class UpdateUserDtoReq {
   })
   additionalProfiles: UserProfile[];
 }
+```
 
-If you use the aliases for DTO objects you need to replace the original types with the aliases: 
+If you use aliases for DTO objects you need to replace the original types with the aliases: 
 - @Type(() => UserProfileAlias)
 -   @JSONSchema({
     description: 'Additional profiles',
