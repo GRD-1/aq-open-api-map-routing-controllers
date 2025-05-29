@@ -295,11 +295,6 @@ export default class UsersController extends BaseController {
   })
   @OpenApiAuth()
   @OpenApiDefaultHttpStatus(204)
-  @OpenApiResponseSchema(GetUsersDtoRes, { 
-    aliases: {
-      'GetUsersDtoRes': 'DeleteUserResAlias'
-    }
-  })
   async deleteUser(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
       res.status(404).json({

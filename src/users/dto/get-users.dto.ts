@@ -41,7 +41,18 @@ export const getUserByIdDescription = {
     name: 'id',
     required: true,
     schema: { type: 'number' as const }
-  }]
+  }],
+  responses: {
+    '204': {
+      description: 'the user was deleted',
+    },
+    '400': {
+      description: 'Bad Request',
+    },
+    '403': {
+      description: 'Forbidden',
+    }
+  }
 };
 
 export class GetUsersDtoReq {
