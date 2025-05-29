@@ -225,84 +225,79 @@ When working with DTOs that contain nested objects, you need to properly decorat
 
 ```typescript
 import { Type } from 'class-transformer';
-import { IsString, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, IsEmail, IsArray, ValidateNested } from 'class-validator';
 import { JSONSchema } from 'class-validator-jsonschema';
 
-// Nested DTO
-export class UserProfile {
-  @IsString()
+// Nested DTO for user data
+export class UserDataDto {
+  @IsNumber()
   @JSONSchema({
-    description: 'User first name',
-    example: 'John',
-    type: 'string'
+    description: 'User unique identifier',
+    type: 'number'
   })
-  firstName: string;
+  id: number;
 
-  @IsString()
+  @IsEmail()
   @JSONSchema({
-    description: 'User last name',
-    example: 'Doe',
+    description: 'User email address',
     type: 'string'
   })
-  lastName: string;
+  email: string;
 }
 
-// Main DTO with nested object
-export class UpdateUserDtoReq {
-  @ValidateNested()                           // Required for nested validation
-  @Type(() => UserProfile)                    // Required for proper transformation
+// Response DTO with array of users
+export class GetUsersDtoRes {
+  @IsString()
   @JSONSchema({
-    description: 'User profile information',
-    type: 'object',
-    $ref: '#/components/schemas/UserProfile'
+    description: 'Response status',
+    type: 'string'
   })
-  profile: UserProfile;
+  status: string;
 
-  @IsArray()                                  // Required for arrays
-  @ValidateNested({ each: true })            // Required for array validation
-  @Type(() => UserProfile)                    // Required for array transformation
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UserDataDto)
   @JSONSchema({
-    description: 'Additional user profiles',
+    description: 'List of users',
     type: 'array',
     items: { 
-      $ref: '#/components/schemas/UserProfile'
-    },
-    example: [{
-      firstName: 'Jane',
-      lastName: 'Smith'
-    }]
+      $ref: '#/components/schemas/UserDataDto'
+    }
   })
-  additionalProfiles: UserProfile[];
+  data: UserDataDto[];
 }
 ```
 
 If you use aliases for DTO objects you need to replace the original types with the aliases: 
-- Replace `@Type(() => UserProfile)` with `@Type(() => UserProfileAlias)`
+- Replace `@Type(() => UserDataDto)` with `@Type(() => UserDataDtoAlias)`
 - Replace schema references:
 ```typescript
 @JSONSchema({
-  description: 'User profile information',
-  type: 'object',
-  $ref: '#/components/schemas/UserProfileAlias'  // Use alias in schema reference
-})
-
-@JSONSchema({
-  description: 'Additional user profiles',
+  description: 'List of users',
   type: 'array',
   items: { 
-    $ref: '#/components/schemas/UserProfileAlias'  // Use alias in items reference
+    $ref: '#/components/schemas/UserDataDtoAlias'  // Use alias in items reference
   }
 })
 ```
 
 Then provide the aliases in the controller:
 ```typescript
-@OpenApiResponseSchema(UpdateUserDtoReq, {
+@OpenApiGet('/')
+@OpenAPI({
+  summary: 'Get all users',
+  description: 'Retrieves a list of all users'
+})
+@OpenApiDefaultHttpStatus(200)
+@OpenApiResponseSchema(GetUsersDtoRes, {
   aliases: {
-    'UpdateUserDtoReq': 'UpdateUserReqAlias',    // Main DTO alias
-    'UserProfile': 'UserProfileAlias'            // Nested object alias
+    'GetUsersDtoRes': 'GetUsersResAlias',    // Main DTO alias
+    'UserDataDto': 'UserDataDtoAlias'        // Nested object alias
   }
 })
+async getAllUsers(): Promise<GetUsersDtoRes> {
+  // ... implementation
+}
 ```
 
 ### Configs
