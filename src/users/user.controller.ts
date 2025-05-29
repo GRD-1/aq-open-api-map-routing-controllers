@@ -13,7 +13,8 @@ import {
   OpenApiRes,
   OpenApiResponseSchema,
   OpenAPI,
-  OpenApiAuth
+  OpenApiAuth,
+  OpenApiDefaultHttpStatus
 } from '../openapi/decorators';
 import { OpenApiControllerDesc } from '../openapi/decorators';
 import { 
@@ -114,11 +115,8 @@ export default class UsersController extends BaseController {
   @OpenApiPost('/')
   @OpenAPI(createUserDescription)
   @OpenApiAuth()
-  @OpenApiResponseSchema(CreateUserDtoRes, { 
-    aliases: {
-      'CreateUserDtoRes': 'PostUserResAlias'
-    }
-  })
+  @OpenApiDefaultHttpStatus(201)
+  @OpenApiResponseSchema(CreateUserDtoRes, { aliases: { 'CreateUserDtoRes': 'PostUserResAlias' } })
   async createUser(
     @Req() req: Request,
     @Res() res: Response,
@@ -131,11 +129,33 @@ export default class UsersController extends BaseController {
       }
     }) _: CreateUserDtoReq
   ) {
-    const user = await UserService.createItem({ email, password_hash, name });
-    return {
-      status: 'success',
-      data: user
-    };
+    try {
+      const user = await UserService.createItem({ email, password_hash, name });
+      return {
+        status: 'success',
+        data: user
+      };
+    } catch (error) {
+      if (error instanceof ConflictError) {
+        res.status(409).json({
+          status: 'error',
+          message: error.message
+        });
+        return;
+      }
+      if (error instanceof ValidationError) {
+        res.status(400).json({
+          status: 'error',
+          message: error.message
+        });
+        return;
+      }
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to create user'
+      });
+      return;
+    }
   }
 
   @Post('/bulk')
@@ -143,6 +163,7 @@ export default class UsersController extends BaseController {
   @OpenApiPost('/bulk')
   @OpenAPI(createUsersBulkDescription)
   @OpenApiAuth()
+  @OpenApiDefaultHttpStatus(201)
   @OpenApiResponseSchema(CreateUsersBulkDtoRes, { 
     aliases: {
       'CreateUsersBulkDtoRes': 'PostUsersBulkResAlias',
@@ -162,11 +183,26 @@ export default class UsersController extends BaseController {
       }
     }) _: CreateUsersBulkDtoReq
   ) {
-    const createdUsers = await UserService.createBulkItems(users);
-    return {
-      status: 'success',
-      data: createdUsers
-    };
+    try {
+      const createdUsers = await UserService.createBulkItems(users);
+      return {
+        status: 'success',
+        data: createdUsers
+      };
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        res.status(400).json({
+          status: 'error',
+          message: error.message
+        });
+        return;
+      }
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to create users'
+      });
+      return;
+    }
   }
 
   @Put('/:id')
@@ -282,6 +318,7 @@ export default class UsersController extends BaseController {
   @Post('/login')
   @OpenApiPost('/login')
   @OpenAPI(loginDescription)
+  @OpenApiDefaultHttpStatus(200)
   @OpenApiResponseSchema(LoginResponseDto, { 
     aliases: {
       'LoginResponseDto': 'PostUserLoginResAlias'
@@ -297,8 +334,11 @@ export default class UsersController extends BaseController {
         data: tokens
       };
     } catch (error) {
-      if (error instanceof NotFoundError || error instanceof UnauthorizedError) {
-        throw error;
+      if (error instanceof NotFoundError) {
+        throw new ApiError(404, 'User not found');
+      }
+      if (error instanceof UnauthorizedError) {
+        throw new ApiError(401, 'Invalid credentials');
       }
       throw new ApiError(500, 'Failed to login', error);
     }
