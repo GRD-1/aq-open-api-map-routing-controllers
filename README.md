@@ -7,10 +7,13 @@ A Node.js application that demonstrates the implementation of OpenAPI documentat
 - [Launch](#launch)
 - [OpenAPI Documentation](#openapi-documentation)
   - [Overview](#overview)
+  - [Feature structure](#feature-structure)
   - [Decorators](#decorators)
   - [Configs](#configs)
     - [Available Maps](#available-maps)
     - [Creating a New Map](#creating-a-new-map)
+  - [Usage Example](#usage-example)
+    - [Nested objects in DTO](#nested-objects-in-dto)
   - [Working with Documentation](#working-with-documentation)
   - [References](#references)
 
@@ -68,6 +71,26 @@ All decorators we use are prefixed with `OpenApi` for consistency and compatibil
 
 For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/package/class-validator) decorators, for descriptions in DTOs - [class-validator-jsonschema](https://www.npmjs.com/package/class-validator-jsonschema) 
 
+### Feature structure
+
+```
+src/
+├── openapi/
+│   ├── configs/                 # OpenAPI map configurations
+│   │   ├── all.config.ts       # Config for all controllers
+│   │   └── index.ts            # Map configs registry
+│   ├── decorators.ts           # Custom OpenAPI decorators
+│   ├── generate.ts             # OpenAPI spec generation logic
+│   └── types.ts                # Type definitions
+├── controllers/                 # API Controllers
+│   ├── users.controller.ts     # User management endpoints
+│   └── things.controller.ts    # Things management endpoints
+├── dto/                        # Data Transfer Objects
+│   ├── user.dto.ts            # User-related DTOs
+│   └── thing.dto.ts           # Thing-related DTOs
+└── index.ts                    # Application entry point
+```
+
 ### Decorators
 
 #### Controller Decorators
@@ -93,6 +116,12 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
 
 - `@OpenApiDelete('/users/:id')`            - Defines DELETE endpoint with path
 
+- `@OpenAPI({ ... })`                       - Additional OpenAPI metadata for endpoints
+
+- `@OpenApiDefaultHttpStatus(201)`          - Sets default HTTP status code for endpoint
+
+- `@OpenApiResponseSchema(UserResponseDto)` - Defines the response schema for Swagger UI documentation
+
 
 #### Parameter Decorators
 
@@ -104,16 +133,8 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
 
 - `@OpenApiRes()`                           - Marks parameter as Express Response object
 
-#### Response Schema Decorator
 
-- `@OpenApiResponseSchema(UserResponseDto)` - Defines the response schema for Swagger UI documentation
-
-Example:
-```typescript
-@OpenApiResponseSchema(UserResponseDto)
-```
-
-#### Usage Example
+### Usage Example
 
 ```typescript
 @OpenApiJsonController('/users')                    // Base path for all controller endpoints
@@ -129,14 +150,86 @@ export class UsersController {
     summary: 'Partially update a user',
     description: 'Updates specific fields of an existing user'
   })
-  @OpenApiResponseSchema(UpdateUsersDtoRes)         // Response will match this schema
+  @OpenApiDefaultHttpStatus(200)                    // Sets default success status code
+  @OpenApiResponseSchema(UpdateUsersDtoRes, {       // Response schema with aliases
+    aliases: {
+      'UpdateUsersDtoRes': 'UpdateUsersResAlias',
+      'UserProfile': 'UserProfileAlias'            // Alias for nested type
+    }
+  })
   async patchUser(
     @OpenApiParam('id') id: number,                 // Path parameter
-    @OpenApiBody() body: Partial<UpdateUserDtoReq>  // Request body
+    @OpenApiBody(UpdateUserDtoReq, {               // Request body with aliases
+      aliases: {
+        'UpdateUserDtoReq': 'UpdateUserReqAlias',
+        'UserProfile': 'UserProfileAlias'          // Alias for nested type
+      }
+    }) body: UpdateUserDtoReq
   ): Promise<UpdateUsersDtoRes> {
-    // ...
+    // ... implementation
   }
 }
+```
+
+### Nested objects in DTO
+
+When working with DTOs that contain nested objects, you need to properly decorate them to ensure they appear correctly in the generated OpenAPI documentation:
+
+```typescript
+import { Type } from 'class-transformer';
+import { ValidateNested, IsArray } from 'class-validator';
+import { JSONSchema } from 'class-validator-jsonschema';
+
+// Nested DTO
+export class UserProfile {
+  @IsString()
+  @JSONSchema({
+    description: 'User first name',
+    example: 'John'
+  })
+  firstName: string;
+
+  @IsString()
+  @JSONSchema({
+    description: 'User last name',
+    example: 'Doe'
+  })
+  lastName: string;
+}
+
+// Main DTO with nested object
+export class UpdateUserDtoReq {
+  @ValidateNested()                           // Required for nested validation
+  @Type(() => UserProfile)                    // Required for proper transformation
+  @JSONSchema({
+    description: 'User profile information'
+  })
+  profile: UserProfile;
+
+  @IsArray()                                  // Required for arrays
+  @ValidateNested({ each: true })            // Required for array of objects
+  @Type(() => UserProfile)                    // Required for array transformation
+  @JSONSchema({
+    description: 'Additional profiles',
+    items: { $ref: '#/components/schemas/UserProfile' }  // Reference to nested schema
+  })
+  additionalProfiles: UserProfile[];
+}
+
+If you use the aliases for DTO objects you need to replace the original types with the aliases: 
+- @Type(() => UserProfileAlias)
+-   @JSONSchema({
+    description: 'Additional profiles',
+    items: { $ref: '#/components/schemas/UserProfileAlias' }
+  })
+
+```typescript
+@OpenApiResponseSchema(UpdateUserDtoReq, {
+  aliases: {
+    'UpdateUserDtoReq': 'UpdateUserReqAlias',    // Main DTO alias
+    'UserProfile': 'UserProfileAlias'            // Nested object alias
+  }
+})
 ```
 
 ### Configs
