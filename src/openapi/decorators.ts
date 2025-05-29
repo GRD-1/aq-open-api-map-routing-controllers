@@ -10,12 +10,15 @@ import {
   Param,
   Req,
   Res,
-  HttpCode
+  HttpCode,
+  QueryParams
 } from 'routing-controllers';
 import {
   OpenAPI,
   ResponseSchema
 } from 'routing-controllers-openapi';
+import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
+import { defaultMetadataStorage } from 'class-transformer/cjs/storage';
 
 // Export routing-controllers decorators with OpenApi prefix
 export const OpenApiJsonController = JsonController;
@@ -170,4 +173,55 @@ function getDefaultDescription(statusCode: number): string {
   };
   
   return descriptions[statusCode] || `Status code ${statusCode}`;
+}
+
+interface OpenApiQueryParamsOptions {
+  type: Function;
+  required?: boolean;
+  aliases?: Record<string, string>;
+}
+
+export function OpenApiQueryParams(options: OpenApiQueryParamsOptions) {
+  return function (target: any, propertyKey: string, parameterIndex: number) {
+    // Generate schema from the DTO class
+    const schemas = validationMetadatasToSchemas({
+      classTransformerMetadataStorage: defaultMetadataStorage,
+      refPointerPrefix: '#/components/schemas/'
+    });
+
+    // Get the schema for our DTO
+    const dtoSchema = schemas[options.type.name];
+    if (!dtoSchema) return QueryParams()(target, propertyKey, parameterIndex);
+
+    // Store query parameters metadata for OpenAPI
+    const openApi = Reflect.getMetadata('routing-controllers-openapi:openapi', target, propertyKey) || {};
+    if (!openApi.parameters) {
+      openApi.parameters = [];
+    }
+
+    // Add each property from the DTO as a query parameter
+    if (dtoSchema.properties) {
+      Object.entries(dtoSchema.properties).forEach(([propName, propSchema]) => {
+        openApi.parameters.push({
+          in: 'query',
+          name: propName,
+          required: options.required ?? false,
+          schema: propSchema,
+          description: (propSchema as any).description,
+          example: (propSchema as any).example
+        });
+      });
+    }
+
+    // Store aliases in metadata if provided
+    if (options.aliases) {
+      const existingAliases = Reflect.getMetadata('openapi:response:aliases', target, propertyKey) || {};
+      Reflect.defineMetadata('openapi:response:aliases', { ...existingAliases, ...options.aliases }, target, propertyKey);
+    }
+
+    Reflect.defineMetadata('routing-controllers-openapi:openapi', openApi, target, propertyKey);
+
+    // Apply the original QueryParams decorator
+    return QueryParams()(target, propertyKey, parameterIndex);
+  };
 } 

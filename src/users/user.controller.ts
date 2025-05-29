@@ -14,14 +14,16 @@ import {
   OpenApiResponseSchema,
   OpenAPI,
   OpenApiAuth,
-  OpenApiDefaultHttpStatus
+  OpenApiDefaultHttpStatus,
+  OpenApiQueryParams
 } from '../openapi/decorators';
 import { OpenApiControllerDesc } from '../openapi/decorators';
 import { 
   CreateUserDtoReq, 
   UpdateUserDtoReq, 
   GetUsersDtoRes, 
-  GetUsersDtoReq, 
+  GetUsersDtoReq,
+  GetUsersQueryDto,
   CreateUserDtoRes,
   getAllUsersDescription,
   getUserByIdDescription,
@@ -64,10 +66,15 @@ export default class UsersController extends BaseController {
   @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true, aliases: { 'GetUsersDtoRes': 'GetUsersResAlias' }})
   async getAllUsers(
+    @OpenApiQueryParams({
+      type: GetUsersQueryDto,
+      aliases: { 'GetUsersQueryDto': 'GetUsersQueryDtoAlias' }
+    }) _: GetUsersQueryDto,
     @Req() req: Request, 
     @Res() res: Response,
-    @Query() name?: string,
-    @Query() email?: string
+    @Query('name') name?: string,
+    @Query('email') email?: string,
+    @Query('ravoly') ravoly?: string
   ) {
     const users = await UserService.getAllItems({ name, email });
 
@@ -287,6 +294,7 @@ export default class UsersController extends BaseController {
     description: 'Deletes an existing user',
   })
   @OpenApiAuth()
+  @OpenApiDefaultHttpStatus(204)
   @OpenApiResponseSchema(GetUsersDtoRes, { 
     aliases: {
       'GetUsersDtoRes': 'DeleteUserResAlias'

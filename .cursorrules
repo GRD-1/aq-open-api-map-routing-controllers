@@ -21,6 +21,7 @@
         "Always use reef-framework parameter decorators (@Body, @Param, @Query, @Req, @Res)",
         "Use OpenApi* decorators only for OpenAPI documentation, not for routing",
         "Never replace reef-framework decorators with OpenApi* decorators",
+        "Never delete reef-framework decorators without permission",
         "Use @OpenApiJsonController and other OpenApi* decorators alongside reef-framework decorators",
         "Import all OpenApi* decorators from src/openapi/decorators.ts, never from routing-controllers directly",
         "Add @OpenApiControllerDesc with description and tags",

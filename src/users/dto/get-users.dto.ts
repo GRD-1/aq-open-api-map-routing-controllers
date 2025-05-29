@@ -2,9 +2,35 @@ import { IsString, IsEmail, IsNumber, IsDate, IsOptional } from 'class-validator
 import { JSONSchema } from 'class-validator-jsonschema';
 import { ParameterLocation } from 'openapi3-ts';
 
+export class GetUsersQueryDto {
+  @IsString()
+  @IsOptional()
+  @JSONSchema({
+    description: 'Filter users by name (partial match)',
+    example: 'John'
+  })
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  @JSONSchema({
+    description: 'Filter users by email (partial match)',
+    example: 'john@example.com'
+  })
+  email?: string;
+
+  @IsString()
+  @IsOptional()
+  @JSONSchema({
+    description: 'ravoly ravolu ravoly',
+    example: 'ravoly!!!'
+  })
+  ravoly?: string;
+}
+
 export const getAllUsersDescription = {
   summary: 'Get all users',
-  description: 'Retrieves a list of all users in the system'
+  description: 'Retrieves a list of all users in the system',
 };
 
 export const getUserByIdDescription = {
