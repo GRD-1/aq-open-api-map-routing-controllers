@@ -105,6 +105,35 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
   const responseTypes = new Map<string, Function>();
   const responseSchemas = new Map<string, SchemaObject | ReferenceObject>();
 
+  // Helper function to add schema and its nested types
+  const addSchemaWithNested = (schema: any, typeName: string) => {
+    if (!schema) return;
+    
+    // Add the main schema
+    filteredSchemas[typeName] = schema;
+    
+    // Find and add nested types
+    if (schema.properties) {
+      Object.values(schema.properties).forEach((prop: any) => {
+        // Handle nested objects with @Type decorator
+        if (prop.type === 'object' && prop.$ref) {
+          const nestedTypeName = prop.$ref.split('/').pop();
+          if (nestedTypeName && schemas[nestedTypeName]) {
+            addSchemaWithNested(schemas[nestedTypeName], nestedTypeName);
+          }
+        }
+        // Handle arrays with nested types
+        if (prop.type === 'array' && prop.items?.$ref) {
+          const nestedTypeName = prop.items.$ref.split('/').pop();
+          if (nestedTypeName && schemas[nestedTypeName]) {
+            addSchemaWithNested(schemas[nestedTypeName], nestedTypeName);
+          }
+        }
+      });
+    }
+  };
+
+  // First pass: collect all schema aliases and map them to method+schema combinations
   config.controllers.forEach(controller => {
     Object.getOwnPropertyNames(controller.prototype).forEach(methodName => {
       const responseAliases = (Reflect.getMetadata('openapi:response:aliases', controller.prototype, methodName) || {}) as Record<string, string>;
@@ -115,6 +144,14 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
       if (responseType) {
         const methodKey = `${controller.name}.${methodName}`;
         responseTypes.set(methodKey, responseType);
+
+        // Add response type and its nested types if no alias provided
+        if (Object.keys(responseAliases).length === 0) {
+          const typeName = responseType.name;
+          if (schemas[typeName]) {
+            addSchemaWithNested(schemas[typeName], typeName);
+          }
+        }
 
         // Add response aliases to the schema aliases map
         Object.entries(responseAliases).forEach(([typeName, alias]) => {
@@ -127,6 +164,14 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
       }
 
       if (requestType) {
+        // Add request type and its nested types if no alias provided
+        if (Object.keys(requestAliases).length === 0) {
+          const typeName = requestType.name;
+          if (schemas[typeName]) {
+            addSchemaWithNested(schemas[typeName], typeName);
+          }
+        }
+
         // Add request aliases to the schema aliases map
         Object.entries(requestAliases).forEach(([typeName, alias]) => {
           schemaAliases.set(typeName, alias);

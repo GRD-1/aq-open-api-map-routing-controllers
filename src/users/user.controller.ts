@@ -124,7 +124,7 @@ export default class UsersController extends BaseController {
   @OpenAPI(createUserDescription)
   @OpenApiAuth()
   @OpenApiDefaultHttpStatus(201)
-  @OpenApiResponseSchema(CreateUserDtoRes, { aliases: { 'CreateUserDtoRes': 'PostUserResAlias' } })
+  @OpenApiResponseSchema(CreateUserDtoRes)
   async createUser(
     @Req() req: Request,
     @Res() res: Response,
@@ -172,14 +172,7 @@ export default class UsersController extends BaseController {
   @OpenAPI(createUsersBulkDescription)
   @OpenApiAuth()
   @OpenApiDefaultHttpStatus(201)
-  @OpenApiResponseSchema(CreateUsersBulkDtoRes, { 
-    aliases: {
-      'CreateUsersBulkDtoRes': 'PostUsersBulkResAlias',
-      'ExtraFields': 'ExtraFieldsAlias',
-      'SuperExtraFields': 'SuperExtraFieldsAlias',
-      'SuperPuperExtraFields': 'SuperPuperExtraFieldsAlias'
-    }
-  })
+  @OpenApiResponseSchema(CreateUsersBulkDtoRes)
   async createUsers(
     @Req() req: Request,
     @Res() res: Response,

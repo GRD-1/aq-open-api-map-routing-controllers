@@ -57,7 +57,7 @@ export class SuperExtraFields {
   @Type(() => SuperPuperExtraFields)
   @IsOptional()
   @JSONSchema({
-    $ref: "#/components/schemas/SuperPuperExtraFieldsAlias"
+    $ref: "#/components/schemas/SuperPuperExtraFields"
   })
   superPuperExtraFields: SuperPuperExtraFields;
 }
@@ -76,7 +76,7 @@ export class ExtraFields {
   @Type(() => SuperExtraFields)
   @IsOptional()
   @JSONSchema({
-    $ref: "#/components/schemas/SuperExtraFieldsAlias"
+    $ref: "#/components/schemas/SuperExtraFields"
   })
   superExtraFields: SuperExtraFields;
 }
@@ -94,7 +94,7 @@ export class CreateUsersBulkDtoRes {
   @JSONSchema({
     description: "Array of created users",
     type: "array",
-    items: { $ref: "#/components/schemas/PostUserResAlias" },
+    items: { $ref: "#/components/schemas/CreateUserDtoRes" },
     example: [{
       id: 1,
       email: "user1@example.com",
@@ -119,7 +119,7 @@ export class CreateUsersBulkDtoRes {
   @IsOptional()
   @JSONSchema({
     description: "Extra fields object",
-    $ref: "#/components/schemas/ExtraFieldsAlias"
+    $ref: "#/components/schemas/ExtraFields"
   })
   extraFields: ExtraFields;
 }

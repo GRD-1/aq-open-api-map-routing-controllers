@@ -220,11 +220,11 @@ export class UpdateUserDtoReq {
 ```
 
 If you use aliases for DTO objects you need to replace the original types with the aliases: 
-- @Type(() => UserProfileAlias)
--   @JSONSchema({
+- `@Type(() => UserProfileAlias)`
+- `@JSONSchema({
     description: 'Additional profiles',
     items: { $ref: '#/components/schemas/UserProfileAlias' }
-  })
+  })`
 
 ```typescript
 @OpenApiResponseSchema(UpdateUserDtoReq, {
