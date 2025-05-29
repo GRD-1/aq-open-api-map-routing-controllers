@@ -1,4 +1,5 @@
 import { IsString, IsNumber, IsDate } from 'class-validator';
+import { JSONSchema } from 'class-validator-jsonschema';
 import { ParameterLocation } from 'openapi3-ts';
 
 export const getCustomerByIdDescription = {
@@ -11,6 +12,15 @@ export const getCustomerByIdDescription = {
     schema: { type: 'number' as const }
   }]
 };
+
+
+export class NestedCustomerFields {
+  @IsNumber()
+  nestdOne: number;
+
+  @IsString()
+  nestedTwo: string;
+} 
 
 export class GetCustomersDtoRes {
   @IsNumber()
@@ -30,4 +40,11 @@ export class GetCustomersDtoRes {
 
   @IsDate()
   updated_at: Date;
+
+  @IsDate()
+  @JSONSchema({
+    description: "Nested customer fields",
+    $ref: "#/components/schemas/NestedCustomerFieldsAlias"
+  })
+  nestedFields: NestedCustomerFields;
 } 

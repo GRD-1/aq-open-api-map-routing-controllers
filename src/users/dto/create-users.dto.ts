@@ -24,80 +24,25 @@ export class CreateUsersBulkDtoReq {
   @ValidateNested({ each: true })
   @Type(() => CreateUserDtoReq)
   @JSONSchema({
-    description: "Array of users to create",
-    type: "array",
     items: { $ref: "#/components/schemas/PostUserReqAlias" },
-    example: [{
-      email: "user1@example.com",
-      password_hash: "$2b$10$...",
-      name: "User One"
-    }, {
-      email: "user2@example.com",
-      password_hash: "$2b$10$...",
-      name: "User Two"
-    }]
   })
   users: CreateUserDtoReq[];
 }
 
-@JSONSchema({
-  description: "Super puper extra fields object",
-  type: "object",
-  properties: {
-    superPuperExtraFieldOne: {
-      type: "string",
-      description: "First super puper extra field",
-      example: "super puper extra value one"
-    },
-    superPuperExtraFieldTwo: {
-      type: "number",
-      description: "Second super puper extra field",
-      example: 42
-    },
-    superPuperExtraFieldThree: {
-      type: "boolean",
-      description: "Third super puper extra field",
-      example: true
-    }
-  }
-})
 export class SuperPuperExtraFields {
   @IsString()
   @IsOptional()
-  @JSONSchema({
-    description: "First super puper extra field",
-    type: "string",
-    example: "super puper extra value one"
-  })
   superPuperExtraFieldOne: string;
 
   @IsNumber()
   @IsOptional()
-  @JSONSchema({
-    description: "Second super puper extra field",
-    type: "number",
-    example: 42
-  })
   superPuperExtraFieldTwo: number;
 
   @IsBoolean()
   @IsOptional()
-  @JSONSchema({
-    description: "Third super puper extra field",
-    type: "boolean",
-    example: true
-  })
   superPuperExtraFieldThree: boolean;
 }
 
-@JSONSchema({
-  description: "Super extra fields object",
-  properties: {
-    superPuperExtraFields: {
-      $ref: "#/components/schemas/SuperPuperExtraFieldsAlias"
-    }
-  }
-})
 export class SuperExtraFields {
   @IsString()
   @IsOptional()
@@ -112,21 +57,11 @@ export class SuperExtraFields {
   @Type(() => SuperPuperExtraFields)
   @IsOptional()
   @JSONSchema({
-    description: "Super puper extra fields object",
     $ref: "#/components/schemas/SuperPuperExtraFieldsAlias"
   })
   superPuperExtraFields: SuperPuperExtraFields;
 }
 
-@JSONSchema({
-  description: "Extra fields object",
-  type: "object",
-  properties: {
-    superExtraFields: {
-      $ref: "#/components/schemas/SuperExtraFieldsAlias"
-    }
-  }
-})
 export class ExtraFields {
   @IsString()
   @IsOptional()
@@ -141,7 +76,6 @@ export class ExtraFields {
   @Type(() => SuperExtraFields)
   @IsOptional()
   @JSONSchema({
-    description: "Super extra fields object",
     $ref: "#/components/schemas/SuperExtraFieldsAlias"
   })
   superExtraFields: SuperExtraFields;

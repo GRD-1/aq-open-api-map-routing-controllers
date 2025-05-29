@@ -18,7 +18,13 @@ import { OpenAPI, OpenApiResponseSchema } from '../openapi/decorators';
 export default class CustomersController extends BaseController {
   @Get('/')
   @OpenApiGet('/')
-  @OpenApiResponseSchema(GetCustomersDtoRes, { isArray: true, alias: 'GetCustomersResAlias' })
+  @OpenApiResponseSchema(GetCustomersDtoRes, { 
+    isArray: true,
+    alias: 'GetCustomersResAlias',
+    nestedAliases: {
+      'NestedCustomerFields': 'NestedCustomerFieldsAlias',
+    }
+  })
   async getAllCustomers(@Req() req: Request, @Res() res: Response) {
     const customers = [
       {
