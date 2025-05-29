@@ -104,6 +104,7 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
   // First pass: collect all schema aliases and map them to method+schema combinations
   const responseTypes = new Map<string, Function>();
   const responseSchemas = new Map<string, SchemaObject | ReferenceObject>();
+  const requestBodyUpdates = new Map<string, string>();
 
   // Helper function to add schema and its nested types
   const addSchemaWithNested = (schema: any, typeName: string) => {
@@ -180,6 +181,12 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
             filteredSchemas[alias] = schemas[typeName];
           }
         });
+
+        // Store request body description update if alias exists
+        const mainRequestAlias = requestAliases[requestType.name];
+        if (mainRequestAlias) {
+          requestBodyUpdates.set(requestType.name, mainRequestAlias);
+        }
       }
     });
   });
@@ -215,6 +222,18 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
       tags: []
     },
   ) as OpenAPISpec;
+
+  // Update request body descriptions with aliases
+  Object.values(spec.paths).forEach(pathItem => {
+    Object.values(pathItem).forEach((operation: any) => {
+      if (operation.requestBody?.description) {
+        const alias = requestBodyUpdates.get(operation.requestBody.description);
+        if (alias) {
+          operation.requestBody.description = alias;
+        }
+      }
+    });
+  });
 
   // Add controller metadata to tags and collect used schemas
   config.controllers.forEach(controller => {
