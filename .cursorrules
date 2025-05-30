@@ -60,6 +60,20 @@
         "Include security schemes from @OpenApiAuth decorators",
         "Support multiple spec file generation based on controller combinations"
       ]
+    },
+    {
+      "pattern": "**/*.spec.ts",
+      "rules": [
+        "Use only Mocha and Chai for testing - no other testing frameworks allowed",
+        "Use Chai's expect syntax for assertions",
+        "Follow BDD style with describe() and it()",
+        "Group tests by feature or component",
+        "Use beforeEach/afterEach for test setup/cleanup",
+        "Write descriptive test names that explain the behavior being tested",
+        "Test both success and error cases",
+        "Use async/await for asynchronous tests",
+        "Mock external dependencies appropriately"
+      ]
     }
   ],
   "ignore": [
