@@ -104,7 +104,7 @@ export default class UsersController extends BaseController {
   @OpenApiPost('/')
   @OpenAPI(createUserDescription)
   @OpenApiAuth()
-  @OpenApiDefaultHttpStatus(201)
+  @OpenApiDefaultHttpStatus(DEFAULT_OPENAPI_SCHEMA_CONTENT.CREATED_201)
   @OpenApiResponseSchema(CreateUserDtoRes)
   async createUser(
     @Req() req: Request,
@@ -152,7 +152,7 @@ export default class UsersController extends BaseController {
   @OpenApiPost('/bulk')
   @OpenAPI(createUsersBulkDescription)
   @OpenApiAuth()
-  @OpenApiDefaultHttpStatus(201)
+  @OpenApiDefaultHttpStatus(DEFAULT_OPENAPI_SCHEMA_CONTENT.CREATED_201)
   @OpenApiResponseSchema(CreateUsersBulkDtoRes)
   async createUsers(
     @Req() req: Request,
@@ -268,7 +268,7 @@ export default class UsersController extends BaseController {
     description: 'Deletes an existing user',
   })
   @OpenApiAuth()
-  @OpenApiDefaultHttpStatus(204)
+  @OpenApiDefaultHttpStatus(DEFAULT_OPENAPI_SCHEMA_CONTENT.DELETED_204)
   async deleteUser(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     if (!id.match(/^\d+$/)) {
       res.status(404).json({
@@ -296,7 +296,6 @@ export default class UsersController extends BaseController {
   @Post('/login')
   @OpenApiPost('/login')
   @OpenAPI(loginDescription)
-  @OpenApiDefaultHttpStatus(200)
   @OpenApiResponseSchema(LoginResponseDto, { 
     aliases: {
       'LoginResponseDto': 'PostUserLoginResAlias'

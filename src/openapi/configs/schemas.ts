@@ -96,4 +96,20 @@ export const DEFAULT_OPENAPI_SCHEMA_CONTENT = {
     description: 'Not processable',
     contentType: 'application/json',
   },
+  OK_200: {
+    statusCode: 200,
+    description: 'Success',
+    contentType: 'application/json',
+  },
+  CREATED_201: {
+    statusCode: 201,
+    description: 'Record created successfully',
+    contentType: 'application/json',
+  },
+  DELETED_204: {
+    statusCode: 204,
+    description: 'Record deleted',
+    contentType: 'application/json',
+  },
 }
+

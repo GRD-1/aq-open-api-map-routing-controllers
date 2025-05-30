@@ -19,6 +19,7 @@ import {
 } from 'routing-controllers-openapi';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import { defaultMetadataStorage } from 'class-transformer/cjs/storage';
+import { DEFAULT_OPENAPI_SCHEMA_CONTENT } from './configs/schemas';
 
 // Export routing-controllers decorators with OpenApi prefix
 export const OpenApiJsonController = JsonController;
@@ -141,25 +142,6 @@ export function OpenApiAuth() {
   };
 }
 
-function getDefaultDescription(statusCode: number): string {
-  const descriptions: Record<number, string> = {
-    200: 'OK - Request successful',
-    201: 'Created - Resource created successfully',
-    202: 'Accepted - Request accepted for processing',
-    204: 'No Content - Request successful, no content to return',
-    400: 'Bad Request - Invalid input data',
-    401: 'Unauthorized - Authentication required',
-    403: 'Forbidden - Access denied',
-    404: 'Not Found - Resource not found',
-    409: 'Conflict - Resource conflict',
-    422: 'Unprocessable Entity - Validation failed',
-    500: 'Internal Server Error - Server error occurred',
-    503: 'Service Unavailable - Server temporarily unavailable'
-  };
-  
-  return descriptions[statusCode] || `Status code ${statusCode}`;
-}
-
 interface OpenApiBodyOptions {
   aliases?: Record<string, string>;  // Map of type names to their aliases (including main type and nested types)
 }
@@ -179,7 +161,11 @@ export function OpenApiBody(dtoClass: Function, options: OpenApiBodyOptions = {}
   };
 }
 
-export function OpenApiDefaultHttpStatus(statusCode: number) {
+type OpenApiDefaultHttpStatusArgs = (typeof DEFAULT_OPENAPI_SCHEMA_CONTENT)[keyof typeof DEFAULT_OPENAPI_SCHEMA_CONTENT];
+
+export function OpenApiDefaultHttpStatus(status: OpenApiDefaultHttpStatusArgs) {
+  const { statusCode, description } = status;
+
   return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     // Store the status code in metadata for OpenAPI
     const openApi = Reflect.getMetadata('openapi', target, propertyKey) || {};
@@ -187,12 +173,7 @@ export function OpenApiDefaultHttpStatus(statusCode: number) {
       openApi.responses = {};
     }
     
-    // If the response doesn't exist for this status code, create it
-    if (!openApi.responses[statusCode]) {
-      openApi.responses[statusCode] = {
-        description: getDefaultDescription(statusCode)
-      };
-    }
+    openApi.responses[statusCode] = description;
     
     Reflect.defineMetadata('openapi', openApi, target, propertyKey);
     
