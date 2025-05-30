@@ -1,55 +1,38 @@
-import { Request, Response } from 'express';
+import {Request, Response} from 'express';
 import UserService from './user.service';
 import {
-  OpenApiJsonController,
-  OpenApiGet,
-  OpenApiPost,
-  OpenApiPut,
-  OpenApiPatch,
-  OpenApiDelete,
-  OpenApiBody,
-  OpenApiParam,
-  OpenApiReq,
-  OpenApiRes,
-  OpenApiResponseSchema,
   OpenAPI,
   OpenApiAuth,
+  OpenApiBody,
+  OpenApiControllerDesc,
   OpenApiDefaultHttpStatus,
-  OpenApiQueryParams
+  OpenApiDelete,
+  OpenApiGet,
+  OpenApiJsonController,
+  OpenApiPatch,
+  OpenApiPost,
+  OpenApiPut,
+  OpenApiQueryParams,
+  OpenApiResponse,
+  OpenApiResponseSchema
 } from '../openapi/decorators';
-import { OpenApiControllerDesc } from '../openapi/decorators';
-import { 
-  CreateUserDtoReq, 
-  UpdateUserDtoReq, 
-  GetUsersDtoRes, 
-  GetUsersDtoReq,
-  GetUsersQueryDto,
+import {
+  createUserDescription,
+  CreateUserDtoReq,
   CreateUserDtoRes,
   getAllUsersDescription,
   getUserByIdDescription,
-  createUserDescription
+  GetUsersDtoRes,
+  GetUsersQueryDto,
+  UpdateUserDtoReq
 } from './dto';
-import { 
-  CreateUsersBulkDtoReq, 
-  CreateUsersBulkDtoRes,
-  createUsersBulkDescription 
-} from './dto/create-users.dto';
-import { 
-  LoginRequestDto, 
-  LoginResponseDto,
-  loginDescription 
-} from './dto/login.dto';
-import { 
-  updateUserDescription,
-  patchUserDescription 
-} from './dto/update-user.dto';
-import { BaseController, Controller, Get, Post, Put, Patch, Delete, Body, Param, Req, Res, Query } from 'reef-framework';
-import { ConflictError, ValidationError, ApiError, NotFoundError, UnauthorizedError } from '../errors/api.error';
-import { Auth } from '../decorators/auth.decorator';
-import { JsonController, OnUndefined, HttpCode } from 'routing-controllers';
-import { OpenAPI as RoutingOpenAPI, ResponseSchema } from 'routing-controllers-openapi';
-import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
-import { User } from '../database/models/user.model';
+import {createUsersBulkDescription, CreateUsersBulkDtoReq, CreateUsersBulkDtoRes} from './dto/create-users.dto';
+import {loginDescription, LoginRequestDto, LoginResponseDto} from './dto/login.dto';
+import {patchUserDescription, updateUserDescription} from './dto/update-user.dto';
+import {BaseController, Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, Res} from 'reef-framework';
+import {ApiError, ConflictError, NotFoundError, UnauthorizedError, ValidationError} from '../errors/api.error';
+import {Auth} from '../decorators/auth.decorator';
+import {DEFAULT_OPENAPI_SCHEMA_CONTENT} from "../openapi/configs/schemas";
 
 @OpenApiAuth()
 @OpenApiJsonController('/users')
@@ -65,6 +48,7 @@ export default class UsersController extends BaseController {
   @OpenAPI(getAllUsersDescription)
   @OpenApiAuth()
   @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true, aliases: { 'GetUsersDtoRes': 'GetUsersResAlias' }})
+  @OpenApiResponse(DEFAULT_OPENAPI_SCHEMA_CONTENT.NOT_AUTHORISED_401)
   async getAllUsers(
     @OpenApiQueryParams({
       type: GetUsersQueryDto,

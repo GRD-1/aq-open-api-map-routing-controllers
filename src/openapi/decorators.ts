@@ -54,6 +54,19 @@ export function OpenApiResponseSchema(responseDto: Function, options: OpenApiRes
   };
 }
 
+export function OpenApiResponse(
+  responseClass: { schema?: string; statusCode: number; description: string },
+  params?: { statusCode?: number; description?: string },
+) {
+  const { schema, statusCode, description } = { ...responseClass, ...params }
+  let schemaName = ''
+  if (!schema) schemaName = description
+
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    ResponseSchema(schema || schemaName, { statusCode, description })(target, propertyKey, descriptor)
+  }
+}
+
 export interface OpenApiControllerDescOptions {
   description: string;
   tags?: string[];
