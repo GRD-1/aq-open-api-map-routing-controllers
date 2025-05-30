@@ -1,0 +1,19 @@
+{
+  "extension": ["ts"],
+  "nodeOptions": ["--trace-warnings"],
+  "spec": ["./tests-ts/init-integration-tests.ts", "./tests-ts/**/*.spec.ts"],
+  "watch-files": [
+    "./tests-ts/**/*.ts",
+    "./server/**/*.ts",
+    "./server/**/*.js",
+    "imports/lib/constants/**/*.js",
+    "imports/lib/validators/**/*.ts",
+    "imports/lib/DTO/**/*.ts",
+    "tests/helpers/**/*.js",
+    "tests/fixtures/**/*.mjs",
+    "tests-ts/helpers/**/*.ts",
+    "tests-ts/fixtures/**/*.ts"
+  ],
+  "require": ["./tests-ts/compiler.js"],
+  "watch": true
+}
