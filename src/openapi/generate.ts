@@ -13,8 +13,7 @@ import {
   ResponseObject,
   SchemaObject,
   SecuritySchemeObject,
-} from 'routing-controllers-openapi/node_modules/openapi3-ts/dist/model/OpenApi'
-import {defaultMetadataStorage} from 'class-transformer/cjs/storage'
+} from 'routing-controllers-openapi/node_modules/openapi3-ts/dist/model'
 
 import {DEFAULT_OPENAPI_SCHEMAS} from './configs/schemas'
 
@@ -97,7 +96,6 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
   newStorage.useInterceptors = storage.useInterceptors
 
   const schemas = validationMetadatasToSchemas({
-    classTransformerMetadataStorage: defaultMetadataStorage,
     refPointerPrefix: '#/components/schemas/',
   }) as Record<string, SchemaObject | ReferenceObject>
 
@@ -258,6 +256,40 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
             if (methodName) {
               const methodKey = `${controller.name}.${methodName}`
               const responseType = responseTypes.get(methodKey)
+
+              // Handle OpenApiResponse decorator
+              const openApiResponses = Reflect.getMetadata('openapi:responses', controller.prototype, methodName) || []
+              openApiResponses.forEach((responseMetadata: any) => {
+                if (!operation.responses) {
+                  operation.responses = {}
+                }
+
+                const { statusCode, description, schema, contentType } = responseMetadata
+                if (!operation.responses[statusCode]) {
+                  operation.responses[statusCode] = {
+                    description: description || '',
+                    content: contentType ? {
+                      [contentType]: {}
+                    } : undefined
+                  }
+                }
+
+                if (schema && contentType) {
+                  if (!operation.responses[statusCode].content) {
+                    operation.responses[statusCode].content = {}
+                  }
+                  if (!operation.responses[statusCode].content[contentType]) {
+                    operation.responses[statusCode].content[contentType] = {}
+                  }
+
+                  // If schema is a reference to DEFAULT_OPENAPI_SCHEMAS
+                  if (typeof schema === 'string' && DEFAULT_OPENAPI_SCHEMAS[schema]) {
+                    operation.responses[statusCode].content[contentType].schema = DEFAULT_OPENAPI_SCHEMAS[schema]
+                  } else {
+                    operation.responses[statusCode].content[contentType].schema = schema
+                  }
+                }
+              })
 
               if (operation.requestBody?.content?.['application/json']?.schema) {
                 const requestAlias = Reflect.getMetadata('openapi:request:alias', controller.prototype, methodName)

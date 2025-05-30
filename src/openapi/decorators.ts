@@ -55,15 +55,27 @@ export function OpenApiResponseSchema(responseDto: Function, options: OpenApiRes
 }
 
 export function OpenApiResponse(
-  responseClass: { schema?: string; statusCode: number; description: string },
+  responseConfig: { schema?: string; statusCode: number; description: string; contentType?: string },
   params?: { statusCode?: number; description?: string },
 ) {
-  const { schema, statusCode, description } = { ...responseClass, ...params }
-  let schemaName = ''
-  if (!schema) schemaName = description
+  const { schema, statusCode, description, contentType = 'application/json' } = { ...responseConfig, ...params }
 
   return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    ResponseSchema(schema || schemaName, { statusCode, description })(target, propertyKey, descriptor)
+    // Get existing responses or initialize new array
+    const existingResponses = Reflect.getMetadata('openapi:responses', target, propertyKey) || []
+    
+    // Add new response metadata
+    existingResponses.push({
+      statusCode,
+      description,
+      schema,
+      contentType
+    })
+    
+    // Store updated responses metadata
+    Reflect.defineMetadata('openapi:responses', existingResponses, target, propertyKey)
+    
+    return descriptor
   }
 }
 

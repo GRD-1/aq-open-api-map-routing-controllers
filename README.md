@@ -124,6 +124,8 @@ src/
 
 - `@OpenApiResponseSchema(UserResponseDto)` - Defines the response schema for Swagger UI documentation
 
+- `@OpenApiResponse({ ... })`               - Defines additional response types with status codes and schemas
+
 
 #### Parameter Decorators
 
@@ -163,6 +165,12 @@ export class UsersController {
       'UserProfile': 'UserProfileAlias'            // Alias for nested type
     }
   })
+  @OpenApiResponse({                                // Another response type
+    statusCode: 404,
+    description: 'User not found',
+    schema: 'NotFound'
+    contentType: 'application/json'
+ })
   async patchUser(
     @OpenApiParam('id') id: number,                 // Path parameter
     @OpenApiBody(UpdateUserDtoReq, {               // Request body with aliases
