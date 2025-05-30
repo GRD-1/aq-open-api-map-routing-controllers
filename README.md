@@ -137,7 +137,7 @@ src/
 
 - `@OpenApiRes()`                           - Marks parameter as Express Response object
 
-- `@OpenApiQueryParams()`                   - Defines query parameters using a DTO class
+- `@OpenApiQuery()`                         - Defines query parameters using a DTO class for OpenAPI documentation
 
 
 ### Usage
@@ -180,6 +180,17 @@ export class UsersController {
       }
     }) body: UpdateUserDtoReq
   ): Promise<UpdateUsersDtoRes> {
+    // ... implementation
+  }
+
+  @OpenApiGet('/')                                  // GET endpoint at /users
+  @OpenAPI({                                        // Additional OpenAPI metadata
+    summary: 'Get all users',
+    description: 'Get list of users with filters'
+  })
+  async getUsers(
+    @OpenApiQuery() query: GetUsersQueryDto,        // Query parameters from DTO
+  ) {
     // ... implementation
   }
 }

@@ -12,7 +12,7 @@ import {
   OpenApiPatch,
   OpenApiPost,
   OpenApiPut,
-  OpenApiQueryParams,
+  OpenApiQuery,
   OpenApiResponse,
   OpenApiResponseSchema
 } from '../openapi/decorators';
@@ -50,10 +50,7 @@ export default class UsersController extends BaseController {
   @OpenApiResponseSchema(GetUsersDtoRes, { isArray: true, aliases: { 'GetUsersDtoRes': 'GetUsersResAlias' }})
   @OpenApiResponse(DEFAULT_OPENAPI_SCHEMA_CONTENT.NOT_AUTHORISED_401)
   async getAllUsers(
-    @OpenApiQueryParams({
-      type: GetUsersQueryDto,
-      aliases: { 'GetUsersQueryDto': 'GetUsersQueryDtoAlias' }
-    }) _: GetUsersQueryDto,
+    @OpenApiQuery() _: GetUsersQueryDto,
     @Req() req: Request, 
     @Res() res: Response,
     @Query('name') name?: string,

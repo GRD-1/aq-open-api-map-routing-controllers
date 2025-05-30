@@ -30,6 +30,7 @@ export const OpenApiDelete = Delete;
 export const OpenApiParam = Param;
 export const OpenApiReq = Req;
 export const OpenApiRes = Res;
+export const OpenApiQuery = QueryParams
 
 // Export routing-controllers-openapi decorators
 export { OpenAPI };
@@ -140,6 +141,25 @@ export function OpenApiAuth() {
   };
 }
 
+function getDefaultDescription(statusCode: number): string {
+  const descriptions: Record<number, string> = {
+    200: 'OK - Request successful',
+    201: 'Created - Resource created successfully',
+    202: 'Accepted - Request accepted for processing',
+    204: 'No Content - Request successful, no content to return',
+    400: 'Bad Request - Invalid input data',
+    401: 'Unauthorized - Authentication required',
+    403: 'Forbidden - Access denied',
+    404: 'Not Found - Resource not found',
+    409: 'Conflict - Resource conflict',
+    422: 'Unprocessable Entity - Validation failed',
+    500: 'Internal Server Error - Server error occurred',
+    503: 'Service Unavailable - Server temporarily unavailable'
+  };
+  
+  return descriptions[statusCode] || `Status code ${statusCode}`;
+}
+
 interface OpenApiBodyOptions {
   aliases?: Record<string, string>;  // Map of type names to their aliases (including main type and nested types)
 }
@@ -178,75 +198,5 @@ export function OpenApiDefaultHttpStatus(statusCode: number) {
     
     // Apply the original HttpCode decorator
     return HttpCode(statusCode)(target, propertyKey, descriptor);
-  };
-}
-
-function getDefaultDescription(statusCode: number): string {
-  const descriptions: Record<number, string> = {
-    200: 'OK - Request successful',
-    201: 'Created - Resource created successfully',
-    202: 'Accepted - Request accepted for processing',
-    204: 'No Content - Request successful, no content to return',
-    400: 'Bad Request - Invalid input data',
-    401: 'Unauthorized - Authentication required',
-    403: 'Forbidden - Access denied',
-    404: 'Not Found - Resource not found',
-    409: 'Conflict - Resource conflict',
-    422: 'Unprocessable Entity - Validation failed',
-    500: 'Internal Server Error - Server error occurred',
-    503: 'Service Unavailable - Server temporarily unavailable'
-  };
-  
-  return descriptions[statusCode] || `Status code ${statusCode}`;
-}
-
-interface OpenApiQueryParamsOptions {
-  type: Function;
-  required?: boolean;
-  aliases?: Record<string, string>;
-}
-
-export function OpenApiQueryParams(options: OpenApiQueryParamsOptions) {
-  return function (target: any, propertyKey: string, parameterIndex: number) {
-    // Generate schema from the DTO class
-    const schemas = validationMetadatasToSchemas({
-      classTransformerMetadataStorage: defaultMetadataStorage,
-      refPointerPrefix: '#/components/schemas/'
-    });
-
-    // Get the schema for our DTO
-    const dtoSchema = schemas[options.type.name];
-    if (!dtoSchema) return QueryParams()(target, propertyKey, parameterIndex);
-
-    // Store query parameters metadata for OpenAPI
-    const openApi = Reflect.getMetadata('routing-controllers-openapi:openapi', target, propertyKey) || {};
-    if (!openApi.parameters) {
-      openApi.parameters = [];
-    }
-
-    // Add each property from the DTO as a query parameter
-    if (dtoSchema.properties) {
-      Object.entries(dtoSchema.properties).forEach(([propName, propSchema]) => {
-        openApi.parameters.push({
-          in: 'query',
-          name: propName,
-          required: options.required ?? false,
-          schema: propSchema,
-          description: (propSchema as any).description,
-          example: (propSchema as any).example
-        });
-      });
-    }
-
-    // Store aliases in metadata if provided
-    if (options.aliases) {
-      const existingAliases = Reflect.getMetadata('openapi:response:aliases', target, propertyKey) || {};
-      Reflect.defineMetadata('openapi:response:aliases', { ...existingAliases, ...options.aliases }, target, propertyKey);
-    }
-
-    Reflect.defineMetadata('routing-controllers-openapi:openapi', openApi, target, propertyKey);
-
-    // Apply the original QueryParams decorator
-    return QueryParams()(target, propertyKey, parameterIndex);
   };
 } 
