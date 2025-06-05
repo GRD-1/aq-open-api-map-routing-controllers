@@ -1,0 +1,64 @@
+{
+  "components": {
+    "schemas": {
+      "TestRequestAlias": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "TestResponseAlias": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your JWT token in the format: Bearer <token>"
+      }
+    }
+  },
+  "info": {
+    "title": "Test API",
+    "version": "1.0.0",
+    "description": "Test Description"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/test/": {
+      "get": {
+        "operationId": "TestController.testMethod",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Test method",
+        "tags": [
+          "Test"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Test",
+      "description": "Test Controller"
+    }
+  ]
+}
