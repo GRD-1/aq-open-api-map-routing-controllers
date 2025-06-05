@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import fs from 'fs'
 import path from 'path'
 
-import {getMetadataArgsStorage, MetadataArgsStorage} from 'routing-controllers'
+import {getMetadataArgsStorage} from 'routing-controllers'
 import {routingControllersToSpec} from 'routing-controllers-openapi'
 import {validationMetadatasToSchemas} from 'class-validator-jsonschema'
 import {
@@ -20,8 +20,18 @@ import {DEFAULT_OPENAPI_SCHEMAS} from './configs/schemas'
 import {OpenAPIMapConfig} from './types'
 
 import {allConfig} from './configs/all.config'
+import { 
+  findSchemaRefs, 
+  findAllNestedTypes, 
+  updateSchemaRefs 
+} from './utils/schema.utils'
+import { 
+  createFilteredMetadataStorage, 
+  processControllerMetadata,
+  OperationMetadata 
+} from './utils/metadata.utils'
 
-interface OpenAPISpec extends OpenAPIObject {
+export interface OpenAPISpec extends OpenAPIObject {
   tags: Array<{ name: string; description: string }>
   paths: {
     [path: string]: {
@@ -36,158 +46,92 @@ interface OpenAPISpec extends OpenAPIObject {
   components?: ComponentsObject
 }
 
-interface RefObject {
-  $ref: string
-}
-
-function isRefObject(value: unknown): value is RefObject {
-  return typeof value === 'object' && value !== null && '$ref' in value && typeof (value as any).$ref === 'string'
-}
-
-function findSchemaRefs(obj: any, refs: Set<string>) {
-  if (!obj || typeof obj !== 'object') return
-
-  if (obj.$ref && typeof obj.$ref === 'string') {
-    const match = obj.$ref.match(/#\/components\/schemas\/([^/]+)/)
-    if (match) {
-      refs.add(match[1])
-    }
-  }
-
-  if (obj.items && obj.items.$ref) {
-    const match = obj.items.$ref.match(/#\/components\/schemas\/([^/]+)/)
-    if (match) {
-      refs.add(match[1])
-    }
-  }
-
-  for (const value of Object.values(obj)) {
-    findSchemaRefs(value, refs)
-  }
-}
-
-export function generateOpenAPISpec(config: OpenAPIMapConfig) {
+export function generateOpenAPISpec(config: OpenAPIMapConfig): OpenAPISpec {
+  // Get and filter metadata storage
   const storage = getMetadataArgsStorage()
+  const newStorage = createFilteredMetadataStorage(storage, config)
 
-  const newStorage = new MetadataArgsStorage()
-
-  newStorage.controllers = storage.controllers.filter(ctrl =>
-    config.controllers.some(c => ctrl.target === c || ctrl.target.prototype instanceof c),
-  )
-
-  newStorage.actions = storage.actions.filter(action =>
-    config.controllers.some(c => action.target === c || action.target.prototype instanceof c),
-  )
-
-  newStorage.params = storage.params.filter(param =>
-    config.controllers.some(c => {
-      const target = typeof param.object === 'function' ? param.object : param.object.constructor
-      return target === c || target.prototype instanceof c
-    }),
-  )
-
-  newStorage.responseHandlers = storage.responseHandlers.filter(handler =>
-    config.controllers.some(c => handler.target === c || handler.target.prototype instanceof c),
-  )
-
-  newStorage.middlewares = storage.middlewares
-  newStorage.interceptors = storage.interceptors
-  newStorage.uses = storage.uses
-  newStorage.useInterceptors = storage.useInterceptors
-
+  // Generate schemas from validation metadata
   const schemas = validationMetadatasToSchemas({
     refPointerPrefix: '#/components/schemas/',
   }) as Record<string, SchemaObject | ReferenceObject>
 
-  const usedSchemas = new Set<string>()
+  // Initialize tracking maps
   const schemaAliases = new Map<string, string>()
   const methodSchemaMap = new Map<string, string>()
-  const filteredSchemas: Record<string, SchemaObject | ReferenceObject> = {}
-
   const responseTypes = new Map<string, any>()
   const responseSchemas = new Map<string, SchemaObject | ReferenceObject>()
   const requestBodyUpdates = new Map<string, string>()
+  const filteredSchemas: Record<string, SchemaObject | ReferenceObject> = {}
 
-  const addSchemaWithNested = (schema: any, typeName: string) => {
-    if (!schema) return
-
-    filteredSchemas[typeName] = schema
-
-    if (schema.properties) {
-      Object.values(schema.properties).forEach((prop: any) => {
-        if (prop.type === 'object' && prop.$ref) {
-          const nestedTypeName = prop.$ref.split('/').pop()
-          if (nestedTypeName && schemas[nestedTypeName]) {
-            addSchemaWithNested(schemas[nestedTypeName], nestedTypeName)
-          }
-        }
-
-        if (prop.type === 'array' && prop.items?.$ref) {
-          const nestedTypeName = prop.items.$ref.split('/').pop()
-          if (nestedTypeName && schemas[nestedTypeName]) {
-            addSchemaWithNested(schemas[nestedTypeName], nestedTypeName)
-          }
-        }
-      })
-    }
-  }
-
+  // Process controller metadata and collect schemas
   config.controllers.forEach(controller => {
     Object.getOwnPropertyNames(controller.prototype).forEach(methodName => {
-      const responseAliases = (Reflect.getMetadata('openapi:response:aliases', controller.prototype, methodName) ||
-        {}) as Record<string, string>
-      const requestAliases = (Reflect.getMetadata('openapi:request:aliases', controller.prototype, methodName) ||
-        {}) as Record<string, string>
-      const responseType = Reflect.getMetadata('routing-controllers:response-type', controller.prototype, methodName)
-      const requestType = Reflect.getMetadata('routing-controllers:request-type', controller.prototype, methodName)
+      const responseAliases = (Reflect.getMetadata('openapi:response:aliases', controller.prototype, methodName) || {}) as Record<string, string>;
+      const requestAliases = (Reflect.getMetadata('openapi:request:aliases', controller.prototype, methodName) || {}) as Record<string, string>;
+      const responseType = Reflect.getMetadata('routing-controllers:response-type', controller.prototype, methodName);
+      const requestType = Reflect.getMetadata('routing-controllers:request-type', controller.prototype, methodName);
 
+      // Process response type and aliases
       if (responseType) {
-        const methodKey = `${controller.name}.${methodName}`
-        responseTypes.set(methodKey, responseType)
+        const methodKey = `${controller.name}.${methodName}`;
+        responseTypes.set(methodKey, responseType);
 
-        if (Object.keys(responseAliases).length === 0) {
-          const typeName = responseType.name
-          if (schemas[typeName]) {
-            addSchemaWithNested(schemas[typeName], typeName)
-          }
+        if (Object.keys(responseAliases).length === 0 && schemas[responseType.name]) {
+          addSchemaWithDependencies(schemas[responseType.name], responseType.name, schemas, filteredSchemas);
         }
 
         Object.entries(responseAliases).forEach(([typeName, alias]) => {
-          schemaAliases.set(typeName, alias)
-          usedSchemas.add(typeName)
-
+          schemaAliases.set(typeName, alias);
           if (schemas[typeName]) {
-            responseSchemas.set(alias, schemas[typeName])
+            // Add both the original schema and its alias to filteredSchemas
+            filteredSchemas[alias] = JSON.parse(JSON.stringify(schemas[typeName]));
+            responseSchemas.set(alias, schemas[typeName]);
+            
+            // Process nested schemas
+            const nestedTypes = new Set<string>();
+            findAllNestedTypes(schemas[typeName], nestedTypes, schemas);
+            nestedTypes.forEach(nestedType => {
+              if (schemas[nestedType]) {
+                addSchemaWithDependencies(schemas[nestedType], nestedType, schemas, filteredSchemas);
+              }
+            });
           }
-        })
+        });
       }
 
+      // Process request type and aliases
       if (requestType) {
-        if (Object.keys(requestAliases).length === 0) {
-          const typeName = requestType.name
-          if (schemas[typeName]) {
-            addSchemaWithNested(schemas[typeName], typeName)
-          }
+        if (Object.keys(requestAliases).length === 0 && schemas[requestType.name]) {
+          addSchemaWithDependencies(schemas[requestType.name], requestType.name, schemas, filteredSchemas);
         }
 
         Object.entries(requestAliases).forEach(([typeName, alias]) => {
-          schemaAliases.set(typeName, alias)
-          usedSchemas.add(typeName)
+          schemaAliases.set(typeName, alias);
           if (schemas[typeName]) {
-            filteredSchemas[alias] = schemas[typeName]
+            // Add both the original schema and its alias to filteredSchemas
+            filteredSchemas[alias] = JSON.parse(JSON.stringify(schemas[typeName]));
+            
+            // Process nested schemas
+            const nestedTypes = new Set<string>();
+            findAllNestedTypes(schemas[typeName], nestedTypes, schemas);
+            nestedTypes.forEach(nestedType => {
+              if (schemas[nestedType]) {
+                addSchemaWithDependencies(schemas[nestedType], nestedType, schemas, filteredSchemas);
+              }
+            });
           }
-        })
+        });
 
-        const mainRequestAlias = requestAliases[requestType.name]
+        const mainRequestAlias = requestAliases[requestType.name];
         if (mainRequestAlias) {
-          requestBodyUpdates.set(requestType.name, mainRequestAlias)
+          requestBodyUpdates.set(requestType.name, mainRequestAlias);
         }
       }
-    })
-  })
+    });
+  });
 
-  const availableSchemas = { ...schemas, ...DEFAULT_OPENAPI_SCHEMAS }
-
+  // Generate initial OpenAPI spec
   const spec = routingControllersToSpec(
     newStorage,
     {
@@ -204,7 +148,7 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
     },
     {
       components: {
-        schemas: { ...schemas, ...availableSchemas },
+        schemas: { ...schemas, ...DEFAULT_OPENAPI_SCHEMAS },
         securitySchemes: {
           bearerAuth: {
             type: 'http',
@@ -219,6 +163,7 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
     },
   ) as OpenAPISpec
 
+  // Process paths and update references
   Object.values(spec.paths).forEach(pathItem => {
     Object.values(pathItem).forEach((operation: any) => {
       if (operation.requestBody?.description) {
@@ -230,279 +175,20 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
     })
   })
 
+  // Process controller metadata and update spec
   config.controllers.forEach(controller => {
     const metadata = Reflect.getMetadata('openapi:controller:desc', controller)
     if (metadata) {
-      const controllerName = controller.name
-        .replace('Controller', '')
-        .split(/(?=[A-Z])/)
-        .join(' ')
-      const tagName = metadata.tags?.[0] || controllerName
-
-      let tag = spec.tags.find(t => t.name === tagName)
-      if (!tag) {
-        tag = { name: tagName, description: metadata.description }
-        spec.tags.push(tag)
-      } else {
-        tag.description = metadata.description
-      }
-
-      Object.entries(spec.paths || {}).forEach(([, pathItem]) => {
-        Object.entries(pathItem).forEach(([, operation]) => {
-          if (operation.operationId?.startsWith(`${controller.name}.`)) {
-            operation.tags = [tagName]
-
-            const methodName = operation.operationId.split('.').pop()
-            if (methodName) {
-              const methodKey = `${controller.name}.${methodName}`
-              const responseType = responseTypes.get(methodKey)
-
-              // Handle OpenApiResponse decorator
-              const openApiResponses = Reflect.getMetadata('openapi:responses', controller.prototype, methodName) || []
-              openApiResponses.forEach((responseMetadata: any) => {
-                if (!operation.responses) {
-                  operation.responses = {}
-                }
-
-                const { statusCode, description, schema, contentType } = responseMetadata
-                if (!operation.responses[statusCode]) {
-                  operation.responses[statusCode] = {
-                    description: description || '',
-                    content: contentType ? {
-                      [contentType]: {}
-                    } : undefined
-                  }
-                }
-
-                if (schema && contentType) {
-                  if (!operation.responses[statusCode].content) {
-                    operation.responses[statusCode].content = {}
-                  }
-                  if (!operation.responses[statusCode].content[contentType]) {
-                    operation.responses[statusCode].content[contentType] = {}
-                  }
-
-                  // If schema is a reference to DEFAULT_OPENAPI_SCHEMAS
-                  if (typeof schema === 'string' && DEFAULT_OPENAPI_SCHEMAS[schema]) {
-                    operation.responses[statusCode].content[contentType].schema = DEFAULT_OPENAPI_SCHEMAS[schema]
-                  } else {
-                    operation.responses[statusCode].content[contentType].schema = schema
-                  }
-                }
-              })
-
-              if (operation.requestBody?.content?.['application/json']?.schema) {
-                const requestAlias = Reflect.getMetadata('openapi:request:alias', controller.prototype, methodName)
-                const requestType = Reflect.getMetadata(
-                  'routing-controllers:request-type',
-                  controller.prototype,
-                  methodName,
-                )
-
-                if (requestType && requestAlias) {
-                  operation.requestBody.content['application/json'].schema = {
-                    $ref: `#/components/schemas/${requestAlias}`,
-                  }
-                  operation.requestBody.description = requestAlias
-                }
-                findSchemaRefs(operation.requestBody.content['application/json'].schema, usedSchemas)
-              }
-
-              if (operation.responses) {
-                Object.values(operation.responses).forEach(response => {
-                  const res = response as ResponseObject
-                  if (res.content?.['application/json']?.schema) {
-                    findSchemaRefs(res.content['application/json'].schema, usedSchemas)
-
-                    if (res.content['application/json'].schema.$ref) {
-                      const refMatch = res.content['application/json'].schema.$ref.match(
-                        /#\/components\/schemas\/([^/]+)/,
-                      )
-                      if (refMatch) {
-                        // const schemaName = refMatch[1]
-                        const methodAlias = methodSchemaMap.get(methodKey)
-                        if (methodAlias && responseType) {
-                          res.content['application/json'].schema.$ref = `#/components/schemas/${methodAlias}`
-                        }
-                      }
-                    }
-
-                    const schema = res.content['application/json'].schema as SchemaObject
-                    if (schema.type === 'array' && schema.items && '$ref' in schema.items) {
-                      const refMatch = schema.items.$ref.match(/#\/components\/schemas\/([^/]+)/)
-                      if (refMatch) {
-                        // const schemaName = refMatch[1]
-                        const methodAlias = methodSchemaMap.get(methodKey)
-                        if (methodAlias && responseType) {
-                          schema.items.$ref = `#/components/schemas/${methodAlias}`
-                        }
-                      }
-                    }
-                  }
-                })
-              }
-
-              if (operation.parameters) {
-                operation.parameters.forEach((param: ParameterObject) => {
-                  if (param.schema) {
-                    findSchemaRefs(param.schema, usedSchemas)
-                  }
-                })
-              }
-
-              const openApiMetadata =
-                Reflect.getMetadata('openapi', controller.prototype, methodName) ||
-                Reflect.getMetadata('routing-controllers:openapi', controller.prototype, methodName)
-              if (openApiMetadata?.security) {
-                operation.security = openApiMetadata.security
-              } else {
-                delete operation.security
-                delete spec.security
-              }
-            }
-          }
-        })
-      })
-
-      const controllerOpenApi =
-        Reflect.getMetadata('openapi', controller) || Reflect.getMetadata('routing-controllers:openapi', controller)
-      if (controllerOpenApi) {
-        if (controllerOpenApi.components?.securitySchemes) {
-          if (!spec.components) {
-            spec.components = {}
-          }
-          if (!spec.components.securitySchemes) {
-            spec.components.securitySchemes = {}
-          }
-          Object.assign(spec.components.securitySchemes, controllerOpenApi.components.securitySchemes)
-        }
-
-        if (controllerOpenApi.security) {
-          spec.security = controllerOpenApi.security
-        }
-      }
+      updateControllerMetadata(controller, metadata, spec)
     }
   })
 
-  const nestedSchemas = new Set<string>()
-
-  const findAllNestedTypes = (obj: any, foundTypes: Set<string>) => {
-    if (!obj || typeof obj !== 'object') return
-
-    if (obj.target && obj.properties) {
-      Object.values(obj.properties).forEach((prop: any) => {
-        if (prop.type && typeof prop.type === 'function') {
-          foundTypes.add(prop.type.name)
-
-          if (schemas[prop.type.name]) {
-            findAllNestedTypes(schemas[prop.type.name], foundTypes)
-          }
-        }
-      })
-    }
-
-    if (Array.isArray(obj)) {
-      obj.forEach(item => findAllNestedTypes(item, foundTypes))
-      return
-    }
-
-    for (const [key, value] of Object.entries(obj)) {
-      if (key === '$ref' && typeof value === 'string') {
-        const refName = value.split('/').pop()
-        if (refName) {
-          foundTypes.add(refName)
-
-          if (schemas[refName]) {
-            findAllNestedTypes(schemas[refName], foundTypes)
-          }
-        }
-      } else if (key === 'items' && value && typeof value === 'object' && isRefObject(value)) {
-        const refName = value.$ref.split('/').pop()
-        if (refName) {
-          foundTypes.add(refName)
-
-          if (schemas[refName]) {
-            findAllNestedTypes(schemas[refName], foundTypes)
-          }
-        }
-      } else if (typeof value === 'object') {
-        findAllNestedTypes(value, foundTypes)
-      }
-    }
-  }
-
-  for (const [name, schema] of Object.entries(schemas)) {
-    if (schemaAliases.get(name)) {
-      const foundTypes = new Set<string>()
-      findAllNestedTypes(schema, foundTypes)
-      foundTypes.forEach(type => nestedSchemas.add(type))
-    }
-  }
-
-  for (const [name, schema] of Object.entries(schemas)) {
-    if (schemaAliases.get(name) || nestedSchemas.has(name)) {
-      const alias = schemaAliases.get(name) || name
-      const clonedSchema = JSON.parse(JSON.stringify(schema))
-
-      const updateRefs = (obj: any) => {
-        if (!obj || typeof obj !== 'object') return
-
-        if (Array.isArray(obj)) {
-          obj.forEach(item => updateRefs(item))
-          return
-        }
-
-        for (const [key, value] of Object.entries(obj)) {
-          if (key === '$ref' && typeof value === 'string') {
-            const refName = value.split('/').pop()
-            if (refName && schemaAliases.get(refName)) {
-              obj[key] = value.replace(refName, schemaAliases.get(refName) || refName)
-            }
-          } else if (key === 'items' && value && typeof value === 'object' && isRefObject(value)) {
-            const refName = value.$ref.split('/').pop()
-            if (refName && schemaAliases.get(refName)) {
-              value.$ref = value.$ref.replace(refName, schemaAliases.get(refName) || refName)
-            }
-          } else if (typeof value === 'object') {
-            updateRefs(value)
-          }
-        }
-      }
-
-      updateRefs(clonedSchema)
-      filteredSchemas[alias] = clonedSchema
-    }
-  }
-
-  const updateAllRefs = (obj: any) => {
-    if (!obj || typeof obj !== 'object') return
-
-    if (Array.isArray(obj)) {
-      obj.forEach(item => updateAllRefs(item))
-      return
-    }
-
-    for (const [key, value] of Object.entries(obj)) {
-      if (key === '$ref' && typeof value === 'string') {
-        const refName = value.split('/').pop()
-        if (refName && schemaAliases.get(refName)) {
-          obj[key] = value.replace(refName, schemaAliases.get(refName) || refName)
-        }
-      } else if (key === 'items' && value && typeof value === 'object' && isRefObject(value)) {
-        const refName = value.$ref.split('/').pop()
-        if (refName && schemaAliases.get(refName)) {
-          value.$ref = value.$ref.replace(refName, schemaAliases.get(refName) || refName)
-        }
-      } else if (typeof value === 'object') {
-        updateAllRefs(value)
-      }
-    }
-  }
-
-  updateAllRefs(spec)
+  // Update schema references
+  updateSchemaRefs(spec, schemaAliases)
   spec.components = spec.components || {}
   spec.components.schemas = filteredSchemas
 
+  // Write spec to file
   const outputDir = path.dirname(config.outputPath)
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true })
@@ -513,6 +199,82 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig) {
   console.log(`File written to: ${config.outputPath}`)
 
   return spec
+}
+
+function addSchemaWithDependencies(
+  schema: SchemaObject | ReferenceObject,
+  typeName: string,
+  schemas: Record<string, SchemaObject | ReferenceObject>,
+  filteredSchemas: Record<string, SchemaObject | ReferenceObject>,
+): void {
+  if (!schema) return
+
+  filteredSchemas[typeName] = schema
+
+  if ('properties' in schema && schema.properties) {
+    Object.values(schema.properties).forEach((prop: any) => {
+      if (prop.type === 'object' && prop.$ref) {
+        const nestedTypeName = prop.$ref.split('/').pop()
+        if (nestedTypeName && schemas[nestedTypeName]) {
+          addSchemaWithDependencies(schemas[nestedTypeName], nestedTypeName, schemas, filteredSchemas)
+        }
+      }
+
+      if (prop.type === 'array' && prop.items?.$ref) {
+        const nestedTypeName = prop.items.$ref.split('/').pop()
+        if (nestedTypeName && schemas[nestedTypeName]) {
+          addSchemaWithDependencies(schemas[nestedTypeName], nestedTypeName, schemas, filteredSchemas)
+        }
+      }
+    })
+  }
+}
+
+function updateControllerMetadata(controller: Function, metadata: any, spec: OpenAPISpec): void {
+  const controllerName = controller.name
+    .replace('Controller', '')
+    .split(/(?=[A-Z])/)
+    .join(' ')
+  const tagName = metadata.tags?.[0] || controllerName
+
+  let tag = spec.tags.find(t => t.name === tagName)
+  if (!tag) {
+    tag = { name: tagName, description: metadata.description }
+    spec.tags.push(tag)
+  } else {
+    tag.description = metadata.description
+  }
+
+  Object.entries(spec.paths || {}).forEach(([, pathItem]) => {
+    Object.entries(pathItem).forEach(([, operation]) => {
+      if (operation.operationId?.startsWith(`${controller.name}.`)) {
+        operation.tags = [tagName]
+        const methodName = operation.operationId.split('.').pop()
+        if (methodName) {
+          processControllerMetadata(controller, operation as OperationMetadata, methodName)
+        }
+      }
+    })
+  })
+
+  const controllerOpenApi =
+    Reflect.getMetadata('openapi', controller) || Reflect.getMetadata('routing-controllers:openapi', controller)
+    
+  if (controllerOpenApi) {
+    if (controllerOpenApi.components?.securitySchemes) {
+      if (!spec.components) {
+        spec.components = {}
+      }
+      if (!spec.components.securitySchemes) {
+        spec.components.securitySchemes = {}
+      }
+      Object.assign(spec.components.securitySchemes, controllerOpenApi.components.securitySchemes)
+    }
+
+    if (controllerOpenApi.security) {
+      spec.security = controllerOpenApi.security
+    }
+  }
 }
 
 if (require.main === module) {
