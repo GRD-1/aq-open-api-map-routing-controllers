@@ -13,6 +13,38 @@ export function isRefObject(value: unknown): value is IRefObject {
   );
 }
 
+export function processSchemaAliases(
+  typeName: string,
+  alias: string,
+  schemas: Record<string, SchemaObject | ReferenceObject>,
+  schemaAliases: Map<string, string>,
+  filteredSchemas: Record<string, SchemaObject | ReferenceObject>,
+  responseSchemas?: Map<string, SchemaObject | ReferenceObject>
+): void {
+  schemaAliases.set(typeName, alias);
+  if (schemas[typeName]) {
+    // Add both the original schema and its alias to filteredSchemas
+    filteredSchemas[alias] = JSON.parse(JSON.stringify(schemas[typeName]));
+    if (responseSchemas) {
+      responseSchemas.set(alias, schemas[typeName]);
+    }
+
+    // Process nested schemas
+    const nestedTypes = new Set<string>();
+    findAllNestedTypes(schemas[typeName], nestedTypes, schemas);
+    nestedTypes.forEach((nestedType) => {
+      if (schemas[nestedType]) {
+        addSchemaWithDependencies(
+          schemas[nestedType],
+          nestedType,
+          schemas,
+          filteredSchemas
+        );
+      }
+    });
+  }
+}
+
 export function addSchemaWithDependencies(
   schema: SchemaObject | ReferenceObject,
   typeName: string,

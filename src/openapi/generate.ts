@@ -17,9 +17,9 @@ import { IOpenAPIMapConfig, IOpenAPISpec } from "./types";
 
 import { allConfig } from "./configs/all.config";
 import {
-  findAllNestedTypes,
   updateSchemaRefs,
   addSchemaWithDependencies,
+  processSchemaAliases,
 } from "./utils/schema.utils";
 import {
   createFilteredMetadataStorage,
@@ -85,28 +85,14 @@ export function generateOpenAPISpec(config: IOpenAPIMapConfig): IOpenAPISpec {
         }
 
         Object.entries(responseAliases).forEach(([typeName, alias]) => {
-          schemaAliases.set(typeName, alias);
-          if (schemas[typeName]) {
-            // Add both the original schema and its alias to filteredSchemas
-            filteredSchemas[alias] = JSON.parse(
-              JSON.stringify(schemas[typeName])
-            );
-            responseSchemas.set(alias, schemas[typeName]);
-
-            // Process nested schemas
-            const nestedTypes = new Set<string>();
-            findAllNestedTypes(schemas[typeName], nestedTypes, schemas);
-            nestedTypes.forEach((nestedType) => {
-              if (schemas[nestedType]) {
-                addSchemaWithDependencies(
-                  schemas[nestedType],
-                  nestedType,
-                  schemas,
-                  filteredSchemas
-                );
-              }
-            });
-          }
+          processSchemaAliases(
+            typeName,
+            alias,
+            schemas,
+            schemaAliases,
+            filteredSchemas,
+            responseSchemas
+          );
         });
       }
 
@@ -125,27 +111,13 @@ export function generateOpenAPISpec(config: IOpenAPIMapConfig): IOpenAPISpec {
         }
 
         Object.entries(requestAliases).forEach(([typeName, alias]) => {
-          schemaAliases.set(typeName, alias);
-          if (schemas[typeName]) {
-            // Add both the original schema and its alias to filteredSchemas
-            filteredSchemas[alias] = JSON.parse(
-              JSON.stringify(schemas[typeName])
-            );
-
-            // Process nested schemas
-            const nestedTypes = new Set<string>();
-            findAllNestedTypes(schemas[typeName], nestedTypes, schemas);
-            nestedTypes.forEach((nestedType) => {
-              if (schemas[nestedType]) {
-                addSchemaWithDependencies(
-                  schemas[nestedType],
-                  nestedType,
-                  schemas,
-                  filteredSchemas
-                );
-              }
-            });
-          }
+          processSchemaAliases(
+            typeName,
+            alias,
+            schemas,
+            schemaAliases,
+            filteredSchemas
+          );
         });
 
         const mainRequestAlias = requestAliases[requestType.name];
