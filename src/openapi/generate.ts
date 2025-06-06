@@ -15,7 +15,7 @@ import {
 
 import { DEFAULT_OPENAPI_SCHEMAS } from "./configs/schemas";
 
-import { OpenAPIMapConfig, ControllerType, OpenAPISpec } from "./types";
+import { IOpenAPIMapConfig, IClass, IOpenAPISpec } from "./types";
 
 import { allConfig } from "./configs/all.config";
 import {
@@ -29,7 +29,7 @@ import {
   updateControllerMetadata,
 } from "./utils/metadata.utils";
 
-export function generateOpenAPISpec(config: OpenAPIMapConfig): OpenAPISpec {
+export function generateOpenAPISpec(config: IOpenAPIMapConfig): IOpenAPISpec {
   // Get and filter metadata storage
   const storage = getMetadataArgsStorage();
   const newStorage = createFilteredMetadataStorage(storage, config);
@@ -190,7 +190,7 @@ export function generateOpenAPISpec(config: OpenAPIMapConfig): OpenAPISpec {
       info: config.info,
       tags: [],
     }
-  ) as OpenAPISpec;
+  ) as IOpenAPISpec;
 
   // Process paths and update references
   Object.values(spec.paths).forEach((pathItem) => {

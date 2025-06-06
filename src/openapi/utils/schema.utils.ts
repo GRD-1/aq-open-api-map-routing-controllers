@@ -2,9 +2,9 @@ import {
   SchemaObject,
   ReferenceObject,
 } from "routing-controllers-openapi/node_modules/openapi3-ts/dist/model";
-import { RefObject } from "../types";
+import { IRefObject } from "../types";
 
-export function isRefObject(value: unknown): value is RefObject {
+export function isRefObject(value: unknown): value is IRefObject {
   return (
     typeof value === "object" &&
     value !== null &&

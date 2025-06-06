@@ -4,14 +4,15 @@ import {
   SchemaObject,
   ReferenceObject,
 } from "routing-controllers-openapi/node_modules/openapi3-ts/dist/model";
+import { DEFAULT_OPENAPI_SCHEMA_CONTENT } from "./configs/schemas";
 
-export type ControllerType = {
+export interface IClass {
   new (...args: any[]): any;
   prototype: Record<string, any>;
-};
+}
 
-export interface OpenAPIMapConfig {
-  controllers: any[]; // Array of controller classes
+export interface IOpenAPIMapConfig {
+  controllers: IClass[]; // Array of controller classes
   info: {
     title: string;
     version: string;
@@ -20,7 +21,7 @@ export interface OpenAPIMapConfig {
   outputPath: string; // Path where the OpenAPI spec will be generated
 }
 
-export interface OpenAPISpec extends OpenAPIObject {
+export interface IOpenAPISpec extends OpenAPIObject {
   tags: Array<{ name: string; description: string }>;
   paths: {
     [path: string]: {
@@ -48,7 +49,7 @@ export interface OpenAPISpec extends OpenAPIObject {
   security?: Array<{ [key: string]: string[] }>;
 }
 
-export interface OperationMetadata {
+export interface IOperationMetadata {
   responses?: {
     [key: string]: {
       description: string;
@@ -63,6 +64,28 @@ export interface OperationMetadata {
   [key: string]: any;
 }
 
-export interface RefObject {
+export interface IRefObject {
   $ref: string;
 }
+
+export interface IOpenApiResponseSchemaOptions {
+  isArray?: boolean;
+  aliases?: Record<string, string>; // Map of type names to their aliases (including main type and nested types)
+}
+
+export interface IOpenApiControllerDescOptions {
+  description: string;
+  tags?: string[];
+}
+
+export interface IOpenApiPropertyOptions {
+  description: string;
+  example?: any;
+}
+
+export interface IOpenApiBodyOptions {
+  aliases?: Record<string, string>; // Map of type names to their aliases (including main type and nested types)
+}
+
+export type IOpenApiDefaultHttpStatusArgs =
+  (typeof DEFAULT_OPENAPI_SCHEMA_CONTENT)[keyof typeof DEFAULT_OPENAPI_SCHEMA_CONTENT];

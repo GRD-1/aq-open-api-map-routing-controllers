@@ -1,9 +1,9 @@
 import { MetadataArgsStorage } from "routing-controllers";
 import {
-  OpenAPIMapConfig,
-  ControllerType,
-  OpenAPISpec,
-  OperationMetadata,
+  IOpenAPIMapConfig,
+  IClass,
+  IOpenAPISpec,
+  IOperationMetadata,
 } from "../types";
 import { DEFAULT_OPENAPI_SCHEMAS } from "../configs/schemas";
 import {
@@ -13,7 +13,7 @@ import {
 
 export function createFilteredMetadataStorage(
   storage: MetadataArgsStorage,
-  config: OpenAPIMapConfig
+  config: IOpenAPIMapConfig
 ): MetadataArgsStorage {
   const newStorage = new MetadataArgsStorage();
 
@@ -55,8 +55,8 @@ export function createFilteredMetadataStorage(
 }
 
 export function processControllerMetadata(
-  controller: ControllerType,
-  operation: OperationMetadata,
+  controller: IClass,
+  operation: IOperationMetadata,
   methodName: string
 ): void {
   const openApiResponses =
@@ -117,9 +117,9 @@ export function processControllerMetadata(
 }
 
 export function updateControllerMetadata(
-  controller: ControllerType,
+  controller: IClass,
   metadata: any,
-  spec: OpenAPISpec
+  spec: IOpenAPISpec
 ): void {
   const controllerName = controller.name
     .replace("Controller", "")
@@ -143,7 +143,7 @@ export function updateControllerMetadata(
         if (methodName) {
           processControllerMetadata(
             controller,
-            operation as OperationMetadata,
+            operation as IOperationMetadata,
             methodName
           );
         }

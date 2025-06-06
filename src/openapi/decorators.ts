@@ -17,7 +17,14 @@ import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
 import { validationMetadatasToSchemas } from "class-validator-jsonschema";
 import { defaultMetadataStorage } from "class-transformer/cjs/storage";
 import { DEFAULT_OPENAPI_SCHEMA_CONTENT } from "./configs/schemas";
-import { ControllerType } from "./types";
+import {
+  IClass,
+  IOpenApiResponseSchemaOptions,
+  IOpenApiControllerDescOptions,
+  IOpenApiPropertyOptions,
+  IOpenApiBodyOptions,
+  IOpenApiDefaultHttpStatusArgs,
+} from "./types";
 
 // Export routing-controllers decorators with OpenApi prefix
 export const OpenApiJsonController = JsonController;
@@ -34,14 +41,9 @@ export const OpenApiQuery = QueryParams;
 // Export routing-controllers-openapi decorators
 export { OpenAPI };
 
-interface OpenApiResponseSchemaOptions {
-  isArray?: boolean;
-  aliases?: Record<string, string>; // Map of type names to their aliases (including main type and nested types)
-}
-
 export function OpenApiResponseSchema(
-  responseDto: ControllerType,
-  options: OpenApiResponseSchemaOptions = {}
+  responseDto: IClass,
+  options: IOpenApiResponseSchemaOptions = {}
 ) {
   return function (
     target: any,
@@ -120,24 +122,14 @@ export function OpenApiResponse(
   };
 }
 
-export interface OpenApiControllerDescOptions {
-  description: string;
-  tags?: string[];
-}
-
-export function OpenApiControllerDesc(options: OpenApiControllerDescOptions) {
+export function OpenApiControllerDesc(options: IOpenApiControllerDescOptions) {
   return function (target: any) {
     Reflect.defineMetadata("openapi:controller:desc", options, target);
   };
 }
 
-export interface OpenApiPropertyOptions {
-  description: string;
-  example?: any;
-}
-
 export function OpenApiProperty(
-  options: OpenApiPropertyOptions
+  options: IOpenApiPropertyOptions
 ): PropertyDecorator {
   return function (target: any, propertyKey: string | symbol) {
     Reflect.defineMetadata("openapi:property", options, target, propertyKey);
@@ -187,13 +179,9 @@ export function OpenApiAuth() {
   };
 }
 
-interface OpenApiBodyOptions {
-  aliases?: Record<string, string>; // Map of type names to their aliases (including main type and nested types)
-}
-
 export function OpenApiBody(
-  dtoClass: ControllerType,
-  options: OpenApiBodyOptions = {}
+  dtoClass: IClass,
+  options: IOpenApiBodyOptions = {}
 ) {
   return function (target: any, propertyKey: string, parameterIndex: number) {
     // Store the request type for later use
@@ -219,10 +207,9 @@ export function OpenApiBody(
   };
 }
 
-type OpenApiDefaultHttpStatusArgs =
-  (typeof DEFAULT_OPENAPI_SCHEMA_CONTENT)[keyof typeof DEFAULT_OPENAPI_SCHEMA_CONTENT];
-
-export function OpenApiDefaultHttpStatus(status: OpenApiDefaultHttpStatusArgs) {
+export function OpenApiDefaultHttpStatus(
+  status: IOpenApiDefaultHttpStatusArgs
+) {
   const { statusCode, description } = status;
 
   return function (
