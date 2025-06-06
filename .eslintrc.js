@@ -3,7 +3,7 @@ module.exports = {
     node: true,
     es2021: true,
   },
-  extends: ['airbnb-base', 'plugin:@typescript-eslint/recommended', '@vue/eslint-config-prettier'],
+  extends: ['airbnb-base', 'plugin:@typescript-eslint/recommended'],
   parserOptions: {
     parser: '@typescript-eslint/parser',
     ecmaVersion: 'latest',
@@ -68,27 +68,20 @@ module.exports = {
     {
       files: ['client/**/*', 'imports/**/*', 'packages/**/*', 'stories/**/*'],
       extends: [
-        'plugin:vue/essential',
-        'plugin:vue/recommended',
-        'plugin:vue/strongly-recommended',
         'plugin:storybook/recommended',
-        './lint/client.lint.js',
-        '@vue/eslint-config-prettier',
       ],
-      parser: 'vue-eslint-parser',
       rules: {
         'prettier/prettier': 'error',
-        'vue/no-multiple-template-root': 'off',
       },
     },
     {
-      files: ['server/**/*', 'tests-ts/**/*'],
-      extends: ['airbnb-typescript/base', './lint/server.lint.js', '@vue/eslint-config-prettier'],
+      files: ['src/**/*', 'test/**/*'],
+      extends: ['airbnb-typescript/base', './lint/server.lint.js'],
       rules: {
         'prettier/prettier': 'error',
       },
       parserOptions: {
-        project: './tsconfig.server.json',
+        project: './tsconfig.json',
       },
     },
     {
