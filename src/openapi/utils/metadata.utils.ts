@@ -1,43 +1,48 @@
-import { MetadataArgsStorage } from 'routing-controllers';
-import { OpenAPIMapConfig } from '../types';
-import { DEFAULT_OPENAPI_SCHEMAS } from '../configs/schemas';
-import { SchemaObject, ReferenceObject } from 'routing-controllers-openapi/node_modules/openapi3-ts/dist/model';
+import { MetadataArgsStorage } from "routing-controllers";
+import {
+  OpenAPIMapConfig,
+  ControllerType,
+  OpenAPISpec,
+  OperationMetadata,
+} from "../types";
+import { DEFAULT_OPENAPI_SCHEMAS } from "../configs/schemas";
+import {
+  SchemaObject,
+  ReferenceObject,
+} from "routing-controllers-openapi/node_modules/openapi3-ts/dist/model";
 
-export interface OperationMetadata {
-  responses?: {
-    [key: string]: {
-      description: string;
-      content?: {
-        [key: string]: {
-          schema?: SchemaObject | ReferenceObject;
-        };
-      };
-    };
-  };
-  security?: Array<{ [key: string]: string[] }>;
-  [key: string]: any;
-}
-
-export function createFilteredMetadataStorage(storage: MetadataArgsStorage, config: OpenAPIMapConfig): MetadataArgsStorage {
+export function createFilteredMetadataStorage(
+  storage: MetadataArgsStorage,
+  config: OpenAPIMapConfig
+): MetadataArgsStorage {
   const newStorage = new MetadataArgsStorage();
 
-  newStorage.controllers = storage.controllers.filter(ctrl =>
-    config.controllers.some(c => ctrl.target === c || ctrl.target.prototype instanceof c),
+  newStorage.controllers = storage.controllers.filter((ctrl) =>
+    config.controllers.some(
+      (c) => ctrl.target === c || ctrl.target.prototype instanceof c
+    )
   );
 
-  newStorage.actions = storage.actions.filter(action =>
-    config.controllers.some(c => action.target === c || action.target.prototype instanceof c),
+  newStorage.actions = storage.actions.filter((action) =>
+    config.controllers.some(
+      (c) => action.target === c || action.target.prototype instanceof c
+    )
   );
 
-  newStorage.params = storage.params.filter(param =>
-    config.controllers.some(c => {
-      const target = typeof param.object === 'function' ? param.object : param.object.constructor;
+  newStorage.params = storage.params.filter((param) =>
+    config.controllers.some((c) => {
+      const target =
+        typeof param.object === "function"
+          ? param.object
+          : param.object.constructor;
       return target === c || target.prototype instanceof c;
-    }),
+    })
   );
 
-  newStorage.responseHandlers = storage.responseHandlers.filter(handler =>
-    config.controllers.some(c => handler.target === c || handler.target.prototype instanceof c),
+  newStorage.responseHandlers = storage.responseHandlers.filter((handler) =>
+    config.controllers.some(
+      (c) => handler.target === c || handler.target.prototype instanceof c
+    )
   );
 
   // Preserve other storage properties
@@ -50,12 +55,17 @@ export function createFilteredMetadataStorage(storage: MetadataArgsStorage, conf
 }
 
 export function processControllerMetadata(
-  controller: Function,
+  controller: ControllerType,
   operation: OperationMetadata,
-  methodName: string,
+  methodName: string
 ): void {
-  const openApiResponses = Reflect.getMetadata('openapi:responses', controller.prototype, methodName) || [];
-  
+  const openApiResponses =
+    Reflect.getMetadata(
+      "openapi:responses",
+      controller.prototype,
+      methodName
+    ) || [];
+
   openApiResponses.forEach((responseMetadata: any) => {
     if (!operation.responses) {
       operation.responses = {};
@@ -64,10 +74,12 @@ export function processControllerMetadata(
     const { statusCode, description, schema, contentType } = responseMetadata;
     if (!operation.responses[statusCode]) {
       operation.responses[statusCode] = {
-        description: description || '',
-        content: contentType ? {
-          [contentType]: {}
-        } : undefined
+        description: description || "",
+        content: contentType
+          ? {
+              [contentType]: {},
+            }
+          : undefined,
       };
     }
 
@@ -80,20 +92,82 @@ export function processControllerMetadata(
       }
 
       // If schema is a reference to DEFAULT_OPENAPI_SCHEMAS
-      if (typeof schema === 'string' && DEFAULT_OPENAPI_SCHEMAS[schema]) {
-        operation.responses[statusCode].content[contentType].schema = DEFAULT_OPENAPI_SCHEMAS[schema];
+      if (typeof schema === "string" && DEFAULT_OPENAPI_SCHEMAS[schema]) {
+        operation.responses[statusCode].content[contentType].schema =
+          DEFAULT_OPENAPI_SCHEMAS[schema];
       } else {
         operation.responses[statusCode].content[contentType].schema = schema;
       }
     }
   });
 
-  const openApiMetadata = Reflect.getMetadata('openapi', controller.prototype, methodName) ||
-    Reflect.getMetadata('routing-controllers:openapi', controller.prototype, methodName);
+  const openApiMetadata =
+    Reflect.getMetadata("openapi", controller.prototype, methodName) ||
+    Reflect.getMetadata(
+      "routing-controllers:openapi",
+      controller.prototype,
+      methodName
+    );
 
   if (openApiMetadata?.security) {
     operation.security = openApiMetadata.security;
   } else {
     delete operation.security;
   }
-} 
+}
+
+export function updateControllerMetadata(
+  controller: ControllerType,
+  metadata: any,
+  spec: OpenAPISpec
+): void {
+  const controllerName = controller.name
+    .replace("Controller", "")
+    .split(/(?=[A-Z])/)
+    .join(" ");
+  const tagName = metadata.tags?.[0] || controllerName;
+
+  let tag = spec.tags.find((t) => t.name === tagName);
+  if (!tag) {
+    tag = { name: tagName, description: metadata.description };
+    spec.tags.push(tag);
+  } else {
+    tag.description = metadata.description;
+  }
+
+  Object.entries(spec.paths || {}).forEach(([, pathItem]) => {
+    Object.entries(pathItem).forEach(([, operation]) => {
+      if (operation.operationId?.startsWith(`${controller.name}.`)) {
+        operation.tags = [tagName];
+        const methodName = operation.operationId.split(".").pop();
+        if (methodName) {
+          processControllerMetadata(
+            controller,
+            operation as OperationMetadata,
+            methodName
+          );
+        }
+      }
+    });
+  });
+
+  const controllerOpenApi =
+    Reflect.getMetadata("openapi", controller) ||
+    Reflect.getMetadata("routing-controllers:openapi", controller);
+
+  if (controllerOpenApi) {
+    if (controllerOpenApi.components?.securitySchemes) {
+      if (!spec.components) spec.components = {};
+      if (!spec.components.securitySchemes)
+        spec.components.securitySchemes = {};
+      Object.assign(
+        spec.components.securitySchemes,
+        controllerOpenApi.components.securitySchemes
+      );
+    }
+
+    if (controllerOpenApi.security) {
+      spec.security = controllerOpenApi.security;
+    }
+  }
+}

@@ -1,15 +1,20 @@
-import { SchemaObject, ReferenceObject } from 'routing-controllers-openapi/node_modules/openapi3-ts/dist/model';
-
-export interface RefObject {
-  $ref: string;
-}
+import {
+  SchemaObject,
+  ReferenceObject,
+} from "routing-controllers-openapi/node_modules/openapi3-ts/dist/model";
+import { RefObject } from "../types";
 
 export function isRefObject(value: unknown): value is RefObject {
-  return typeof value === 'object' && value !== null && '$ref' in value && typeof (value as any).$ref === 'string';
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "$ref" in value &&
+    typeof (value as any).$ref === "string"
+  );
 }
 
 export function findSchemaRefs(obj: unknown, refs: Set<string>): void {
-  if (!obj || typeof obj !== 'object') return;
+  if (!obj || typeof obj !== "object") return;
 
   if (isRefObject(obj)) {
     const match = obj.$ref.match(/#\/components\/schemas\/([^/]+)/);
@@ -18,7 +23,7 @@ export function findSchemaRefs(obj: unknown, refs: Set<string>): void {
     }
   }
 
-  if ('items' in obj && obj.items && isRefObject(obj.items)) {
+  if ("items" in obj && obj.items && isRefObject(obj.items)) {
     const match = obj.items.$ref.match(/#\/components\/schemas\/([^/]+)/);
     if (match) {
       refs.add(match[1]);
@@ -26,7 +31,7 @@ export function findSchemaRefs(obj: unknown, refs: Set<string>): void {
   }
 
   if (Array.isArray(obj)) {
-    obj.forEach(item => findSchemaRefs(item, refs));
+    obj.forEach((item) => findSchemaRefs(item, refs));
     return;
   }
 
@@ -35,12 +40,16 @@ export function findSchemaRefs(obj: unknown, refs: Set<string>): void {
   }
 }
 
-export function findAllNestedTypes(obj: unknown, foundTypes: Set<string>, schemas: Record<string, SchemaObject | ReferenceObject>): void {
-  if (!obj || typeof obj !== 'object') return;
+export function findAllNestedTypes(
+  obj: unknown,
+  foundTypes: Set<string>,
+  schemas: Record<string, SchemaObject | ReferenceObject>
+): void {
+  if (!obj || typeof obj !== "object") return;
 
-  if ('target' in obj && 'properties' in obj) {
+  if ("target" in obj && "properties" in obj) {
     Object.values(obj.properties).forEach((prop: any) => {
-      if (prop.type && typeof prop.type === 'function') {
+      if (prop.type && typeof prop.type === "function") {
         foundTypes.add(prop.type.name);
 
         if (schemas[prop.type.name]) {
@@ -51,13 +60,13 @@ export function findAllNestedTypes(obj: unknown, foundTypes: Set<string>, schema
   }
 
   if (Array.isArray(obj)) {
-    obj.forEach(item => findAllNestedTypes(item, foundTypes, schemas));
+    obj.forEach((item) => findAllNestedTypes(item, foundTypes, schemas));
     return;
   }
 
   for (const [key, value] of Object.entries(obj)) {
-    if (key === '$ref' && typeof value === 'string') {
-      const refName = value.split('/').pop();
+    if (key === "$ref" && typeof value === "string") {
+      const refName = value.split("/").pop();
       if (refName) {
         foundTypes.add(refName);
 
@@ -65,8 +74,13 @@ export function findAllNestedTypes(obj: unknown, foundTypes: Set<string>, schema
           findAllNestedTypes(schemas[refName], foundTypes, schemas);
         }
       }
-    } else if (key === 'items' && value && typeof value === 'object' && isRefObject(value)) {
-      const refName = value.$ref.split('/').pop();
+    } else if (
+      key === "items" &&
+      value &&
+      typeof value === "object" &&
+      isRefObject(value)
+    ) {
+      const refName = value.$ref.split("/").pop();
       if (refName) {
         foundTypes.add(refName);
 
@@ -74,33 +88,47 @@ export function findAllNestedTypes(obj: unknown, foundTypes: Set<string>, schema
           findAllNestedTypes(schemas[refName], foundTypes, schemas);
         }
       }
-    } else if (typeof value === 'object') {
+    } else if (typeof value === "object") {
       findAllNestedTypes(value, foundTypes, schemas);
     }
   }
 }
 
-export function updateSchemaRefs(obj: unknown, schemaAliases: Map<string, string>): void {
-  if (!obj || typeof obj !== 'object') return;
+export function updateSchemaRefs(
+  obj: unknown,
+  schemaAliases: Map<string, string>
+): void {
+  if (!obj || typeof obj !== "object") return;
 
   if (Array.isArray(obj)) {
-    obj.forEach(item => updateSchemaRefs(item, schemaAliases));
+    obj.forEach((item) => updateSchemaRefs(item, schemaAliases));
     return;
   }
 
   for (const [key, value] of Object.entries(obj)) {
-    if (key === '$ref' && typeof value === 'string') {
-      const refName = value.split('/').pop();
+    if (key === "$ref" && typeof value === "string") {
+      const refName = value.split("/").pop();
       if (refName && schemaAliases.get(refName)) {
-        (obj as any)[key] = value.replace(refName, schemaAliases.get(refName) || refName);
+        (obj as any)[key] = value.replace(
+          refName,
+          schemaAliases.get(refName) || refName
+        );
       }
-    } else if (key === 'items' && value && typeof value === 'object' && isRefObject(value)) {
-      const refName = value.$ref.split('/').pop();
+    } else if (
+      key === "items" &&
+      value &&
+      typeof value === "object" &&
+      isRefObject(value)
+    ) {
+      const refName = value.$ref.split("/").pop();
       if (refName && schemaAliases.get(refName)) {
-        value.$ref = value.$ref.replace(refName, schemaAliases.get(refName) || refName);
+        value.$ref = value.$ref.replace(
+          refName,
+          schemaAliases.get(refName) || refName
+        );
       }
-    } else if (typeof value === 'object') {
+    } else if (typeof value === "object") {
       updateSchemaRefs(value, schemaAliases);
     }
   }
-} 
+}

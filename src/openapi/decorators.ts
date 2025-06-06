@@ -1,5 +1,5 @@
-import 'reflect-metadata';
-import { 
+import "reflect-metadata";
+import {
   JsonController,
   Get,
   Post,
@@ -11,15 +11,13 @@ import {
   Req,
   Res,
   HttpCode,
-  QueryParams
-} from 'routing-controllers';
-import {
-  OpenAPI,
-  ResponseSchema
-} from 'routing-controllers-openapi';
-import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
-import { defaultMetadataStorage } from 'class-transformer/cjs/storage';
-import { DEFAULT_OPENAPI_SCHEMA_CONTENT } from './configs/schemas';
+  QueryParams,
+} from "routing-controllers";
+import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
+import { validationMetadatasToSchemas } from "class-validator-jsonschema";
+import { defaultMetadataStorage } from "class-transformer/cjs/storage";
+import { DEFAULT_OPENAPI_SCHEMA_CONTENT } from "./configs/schemas";
+import { ControllerType } from "./types";
 
 // Export routing-controllers decorators with OpenApi prefix
 export const OpenApiJsonController = JsonController;
@@ -31,54 +29,95 @@ export const OpenApiDelete = Delete;
 export const OpenApiParam = Param;
 export const OpenApiReq = Req;
 export const OpenApiRes = Res;
-export const OpenApiQuery = QueryParams
+export const OpenApiQuery = QueryParams;
 
 // Export routing-controllers-openapi decorators
 export { OpenAPI };
 
 interface OpenApiResponseSchemaOptions {
   isArray?: boolean;
-  aliases?: Record<string, string>;  // Map of type names to their aliases (including main type and nested types)
+  aliases?: Record<string, string>; // Map of type names to their aliases (including main type and nested types)
 }
 
-export function OpenApiResponseSchema(responseDto: Function, options: OpenApiResponseSchemaOptions = {}) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+export function OpenApiResponseSchema(
+  responseDto: ControllerType,
+  options: OpenApiResponseSchemaOptions = {}
+) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) {
     // Store the response type for later use
-    Reflect.defineMetadata('routing-controllers:response-type', responseDto, target, propertyKey);
-    
+    Reflect.defineMetadata(
+      "routing-controllers:response-type",
+      responseDto,
+      target,
+      propertyKey
+    );
+
     // Store aliases in metadata if provided
     if (options.aliases) {
-      Reflect.defineMetadata('openapi:response:aliases', options.aliases, target, propertyKey);
+      Reflect.defineMetadata(
+        "openapi:response:aliases",
+        options.aliases,
+        target,
+        propertyKey
+      );
     }
-    
+
     // Apply the original ResponseSchema decorator
-    return ResponseSchema(responseDto, { isArray: options.isArray })(target, propertyKey, descriptor);
+    return ResponseSchema(responseDto, { isArray: options.isArray })(
+      target,
+      propertyKey,
+      descriptor
+    );
   };
 }
 
 export function OpenApiResponse(
-  responseConfig: { schema?: string; statusCode: number; description: string; contentType?: string },
-  params?: { statusCode?: number; description?: string },
+  responseConfig: {
+    schema?: string;
+    statusCode: number;
+    description: string;
+    contentType?: string;
+  },
+  params?: { statusCode?: number; description?: string }
 ) {
-  const { schema, statusCode, description, contentType = 'application/json' } = { ...responseConfig, ...params }
+  const {
+    schema,
+    statusCode,
+    description,
+    contentType = "application/json",
+  } = { ...responseConfig, ...params };
 
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) {
     // Get existing responses or initialize new array
-    const existingResponses = Reflect.getMetadata('openapi:responses', target, propertyKey) || []
-    
+    const existingResponses =
+      Reflect.getMetadata("openapi:responses", target, propertyKey) || [];
+
     // Add new response metadata
     existingResponses.push({
       statusCode,
       description,
       schema,
-      contentType
-    })
-    
+      contentType,
+    });
+
     // Store updated responses metadata
-    Reflect.defineMetadata('openapi:responses', existingResponses, target, propertyKey)
-    
-    return descriptor
-  }
+    Reflect.defineMetadata(
+      "openapi:responses",
+      existingResponses,
+      target,
+      propertyKey
+    );
+
+    return descriptor;
+  };
 }
 
 export interface OpenApiControllerDescOptions {
@@ -88,7 +127,7 @@ export interface OpenApiControllerDescOptions {
 
 export function OpenApiControllerDesc(options: OpenApiControllerDescOptions) {
   return function (target: any) {
-    Reflect.defineMetadata('openapi:controller:desc', options, target);
+    Reflect.defineMetadata("openapi:controller:desc", options, target);
   };
 }
 
@@ -97,22 +136,28 @@ export interface OpenApiPropertyOptions {
   example?: any;
 }
 
-export function OpenApiProperty(options: OpenApiPropertyOptions): PropertyDecorator {
+export function OpenApiProperty(
+  options: OpenApiPropertyOptions
+): PropertyDecorator {
   return function (target: any, propertyKey: string | symbol) {
-    Reflect.defineMetadata('openapi:property', options, target, propertyKey);
+    Reflect.defineMetadata("openapi:property", options, target, propertyKey);
   };
 }
 
 export function OpenApiAuth() {
-  return function (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) {
+  return function (
+    target: any,
+    propertyKey?: string,
+    descriptor?: PropertyDescriptor
+  ) {
     // Define security scheme
     const securityScheme = {
       bearerAuth: {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        description: 'Enter your JWT token in the format: Bearer <token>'
-      }
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "Enter your JWT token in the format: Bearer <token>",
+      },
     };
 
     // Define security requirement
@@ -120,13 +165,13 @@ export function OpenApiAuth() {
 
     if (propertyKey && descriptor) {
       // Method decorator
-      const openApi = Reflect.getMetadata('openapi', target, propertyKey) || {};
+      const openApi = Reflect.getMetadata("openapi", target, propertyKey) || {};
       openApi.security = securityRequirement;
-      Reflect.defineMetadata('openapi', openApi, target, propertyKey);
+      Reflect.defineMetadata("openapi", openApi, target, propertyKey);
       return descriptor;
     } else {
       // Controller decorator
-      const openApi = Reflect.getMetadata('openapi', target) || {};
+      const openApi = Reflect.getMetadata("openapi", target) || {};
       if (!openApi.components) {
         openApi.components = {};
       }
@@ -136,48 +181,66 @@ export function OpenApiAuth() {
       if (!openApi.security) {
         openApi.security = securityRequirement;
       }
-      Reflect.defineMetadata('openapi', openApi, target);
+      Reflect.defineMetadata("openapi", openApi, target);
       return target;
     }
   };
 }
 
 interface OpenApiBodyOptions {
-  aliases?: Record<string, string>;  // Map of type names to their aliases (including main type and nested types)
+  aliases?: Record<string, string>; // Map of type names to their aliases (including main type and nested types)
 }
 
-export function OpenApiBody(dtoClass: Function, options: OpenApiBodyOptions = {}) {
+export function OpenApiBody(
+  dtoClass: ControllerType,
+  options: OpenApiBodyOptions = {}
+) {
   return function (target: any, propertyKey: string, parameterIndex: number) {
     // Store the request type for later use
-    Reflect.defineMetadata('routing-controllers:request-type', dtoClass, target, propertyKey);
-    
+    Reflect.defineMetadata(
+      "routing-controllers:request-type",
+      dtoClass,
+      target,
+      propertyKey
+    );
+
     // Store aliases in metadata if provided
     if (options.aliases) {
-      Reflect.defineMetadata('openapi:request:aliases', options.aliases, target, propertyKey);
+      Reflect.defineMetadata(
+        "openapi:request:aliases",
+        options.aliases,
+        target,
+        propertyKey
+      );
     }
-    
+
     // Apply the original Body decorator
     return Body()(target, propertyKey, parameterIndex);
   };
 }
 
-type OpenApiDefaultHttpStatusArgs = (typeof DEFAULT_OPENAPI_SCHEMA_CONTENT)[keyof typeof DEFAULT_OPENAPI_SCHEMA_CONTENT];
+type OpenApiDefaultHttpStatusArgs =
+  (typeof DEFAULT_OPENAPI_SCHEMA_CONTENT)[keyof typeof DEFAULT_OPENAPI_SCHEMA_CONTENT];
 
 export function OpenApiDefaultHttpStatus(status: OpenApiDefaultHttpStatusArgs) {
   const { statusCode, description } = status;
 
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) {
     // Store the status code in metadata for OpenAPI
-    const openApi = Reflect.getMetadata('openapi', target, propertyKey) || {};
+    const openApi = Reflect.getMetadata("openapi", target, propertyKey) || {};
     if (!openApi.responses) {
       openApi.responses = {};
     }
-    
+
     openApi.responses[statusCode] = description;
-    
-    Reflect.defineMetadata('openapi', openApi, target, propertyKey);
-    
+
+    Reflect.defineMetadata("openapi", openApi, target, propertyKey);
+
     // Apply the original HttpCode decorator
     return HttpCode(statusCode)(target, propertyKey, descriptor);
   };
-} 
+}
