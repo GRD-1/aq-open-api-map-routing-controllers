@@ -16,7 +16,11 @@ import { DEFAULT_OPENAPI_SCHEMAS } from "./configs/schemas";
 import { IOpenAPIMapConfig, IOpenAPISpec } from "./types";
 
 import { allConfig } from "./configs/all.config";
-import { findAllNestedTypes, updateSchemaRefs } from "./utils/schema.utils";
+import {
+  findAllNestedTypes,
+  updateSchemaRefs,
+  addSchemaWithDependencies,
+} from "./utils/schema.utils";
 import {
   createFilteredMetadataStorage,
   updateControllerMetadata,
@@ -220,45 +224,6 @@ export function generateOpenAPISpec(config: IOpenAPIMapConfig): IOpenAPISpec {
   console.log(`File written to: ${config.outputPath}`);
 
   return spec;
-}
-
-function addSchemaWithDependencies(
-  schema: SchemaObject | ReferenceObject,
-  typeName: string,
-  schemas: Record<string, SchemaObject | ReferenceObject>,
-  filteredSchemas: Record<string, SchemaObject | ReferenceObject>
-): void {
-  if (!schema) return;
-
-  filteredSchemas[typeName] = schema;
-
-  if ("properties" in schema && schema.properties) {
-    Object.values(schema.properties).forEach((prop: any) => {
-      if (prop.type === "object" && prop.$ref) {
-        const nestedTypeName = prop.$ref.split("/").pop();
-        if (nestedTypeName && schemas[nestedTypeName]) {
-          addSchemaWithDependencies(
-            schemas[nestedTypeName],
-            nestedTypeName,
-            schemas,
-            filteredSchemas
-          );
-        }
-      }
-
-      if (prop.type === "array" && prop.items?.$ref) {
-        const nestedTypeName = prop.items.$ref.split("/").pop();
-        if (nestedTypeName && schemas[nestedTypeName]) {
-          addSchemaWithDependencies(
-            schemas[nestedTypeName],
-            nestedTypeName,
-            schemas,
-            filteredSchemas
-          );
-        }
-      }
-    });
-  }
 }
 
 if (require.main === module) {

@@ -13,6 +13,45 @@ export function isRefObject(value: unknown): value is IRefObject {
   );
 }
 
+export function addSchemaWithDependencies(
+  schema: SchemaObject | ReferenceObject,
+  typeName: string,
+  schemas: Record<string, SchemaObject | ReferenceObject>,
+  filteredSchemas: Record<string, SchemaObject | ReferenceObject>
+): void {
+  if (!schema) return;
+
+  filteredSchemas[typeName] = schema;
+
+  if ("properties" in schema && schema.properties) {
+    Object.values(schema.properties).forEach((prop: any) => {
+      if (prop.type === "object" && prop.$ref) {
+        const nestedTypeName = prop.$ref.split("/").pop();
+        if (nestedTypeName && schemas[nestedTypeName]) {
+          addSchemaWithDependencies(
+            schemas[nestedTypeName],
+            nestedTypeName,
+            schemas,
+            filteredSchemas
+          );
+        }
+      }
+
+      if (prop.type === "array" && prop.items?.$ref) {
+        const nestedTypeName = prop.items.$ref.split("/").pop();
+        if (nestedTypeName && schemas[nestedTypeName]) {
+          addSchemaWithDependencies(
+            schemas[nestedTypeName],
+            nestedTypeName,
+            schemas,
+            filteredSchemas
+          );
+        }
+      }
+    });
+  }
+}
+
 export function findSchemaRefs(obj: unknown, refs: Set<string>): void {
   if (!obj || typeof obj !== "object") return;
 
