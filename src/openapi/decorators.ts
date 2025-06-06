@@ -14,9 +14,6 @@ import {
   QueryParams,
 } from "routing-controllers";
 import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
-import { validationMetadatasToSchemas } from "class-validator-jsonschema";
-import { defaultMetadataStorage } from "class-transformer/cjs/storage";
-import { DEFAULT_OPENAPI_SCHEMA_CONTENT } from "./configs/schemas";
 import {
   IClass,
   IOpenApiResponseSchemaOptions,

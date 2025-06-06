@@ -6,10 +6,6 @@ import {
   IOperationMetadata,
 } from "../types";
 import { DEFAULT_OPENAPI_SCHEMAS } from "../configs/schemas";
-import {
-  SchemaObject,
-  ReferenceObject,
-} from "routing-controllers-openapi/node_modules/openapi3-ts/dist/model";
 
 export function createFilteredMetadataStorage(
   storage: MetadataArgsStorage,

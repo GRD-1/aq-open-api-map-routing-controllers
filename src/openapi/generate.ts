@@ -6,26 +6,19 @@ import { getMetadataArgsStorage } from "routing-controllers";
 import { routingControllersToSpec } from "routing-controllers-openapi";
 import { validationMetadatasToSchemas } from "class-validator-jsonschema";
 import {
-  ParameterObject,
   ReferenceObject,
-  ResponseObject,
   SchemaObject,
   SecuritySchemeObject,
 } from "routing-controllers-openapi/node_modules/openapi3-ts/dist/model";
 
 import { DEFAULT_OPENAPI_SCHEMAS } from "./configs/schemas";
 
-import { IOpenAPIMapConfig, IClass, IOpenAPISpec } from "./types";
+import { IOpenAPIMapConfig, IOpenAPISpec } from "./types";
 
 import { allConfig } from "./configs/all.config";
-import {
-  findSchemaRefs,
-  findAllNestedTypes,
-  updateSchemaRefs,
-} from "./utils/schema.utils";
+import { findAllNestedTypes, updateSchemaRefs } from "./utils/schema.utils";
 import {
   createFilteredMetadataStorage,
-  processControllerMetadata,
   updateControllerMetadata,
 } from "./utils/metadata.utils";
 
@@ -41,7 +34,6 @@ export function generateOpenAPISpec(config: IOpenAPIMapConfig): IOpenAPISpec {
 
   // Initialize tracking maps
   const schemaAliases = new Map<string, string>();
-  const methodSchemaMap = new Map<string, string>();
   const responseTypes = new Map<string, any>();
   const responseSchemas = new Map<string, SchemaObject | ReferenceObject>();
   const requestBodyUpdates = new Map<string, string>();
