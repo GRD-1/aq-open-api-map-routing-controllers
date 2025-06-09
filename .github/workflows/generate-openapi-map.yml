@@ -37,9 +37,19 @@ jobs:
       - name: Check for changes
         id: git-check
         run: |
+          echo "Current git status:"
+          git status
+
           git add public/open-api/*.json
+
+          echo "Git status after adding:"
+          git status
+
           if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Changes detected in OpenAPI map"
             echo "changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No changes detected in OpenAPI map"
           fi
 
       - name: Commit and push changes
@@ -50,6 +60,6 @@ jobs:
           git commit -m "chore: update OpenAPI map specifications [skip ci]"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
           git push
-          echo "Changes committed and pushed successfully"
+          echo "Changes committed and pushed successfully!"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
