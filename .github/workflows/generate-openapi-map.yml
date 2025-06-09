@@ -52,14 +52,21 @@ jobs:
             echo "No changes detected in OpenAPI map"
           fi
 
-      - name: Commit and push changes
-        if: steps.git-check.outputs.changes == 'true' && inputs.commit_changes == 'true'
+      - name: Debug conditions
         run: |
+          echo "changes = ${{ steps.git-check.outputs.changes }}"
+          echo "commit_changes = ${{ inputs.commit_changes }}"
+          echo "Combined condition = ${{ steps.git-check.outputs.changes == 'true' && inputs.commit_changes }}"
+
+      - name: Commit and push changes
+        if: ${{ steps.git-check.outputs.changes == 'true' }}
+        run: |
+          echo "Attempting to commit changes..."
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -m "chore: update OpenAPI map specifications [skip ci]"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
           git push
-          echo "Changes committed and pushed successfully!"
+          echo "Changes committed and pushed successfully"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
