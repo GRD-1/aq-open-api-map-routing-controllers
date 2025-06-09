@@ -20,6 +20,3 @@ build/
 *.swp
 *.swo
 *~
-
-# dynamically generated api docs
-/public/openapi/
