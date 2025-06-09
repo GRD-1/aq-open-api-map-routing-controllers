@@ -55,15 +55,25 @@ jobs:
 
           if [[ -n "$(git status --porcelain)" ]]; then
             echo "Changes detected"
-            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+            echo "Setting changes=true"
           else
             echo "No changes detected"
+            echo "changes=false" >> "$GITHUB_OUTPUT"
+            echo "Setting changes=false"
           fi
 
-      - name: Commit and push changes
-        if: steps.git-check.outputs.changes == 'true' && inputs.commit_changes == 'true'
+      - name: Debug variables
         run: |
+          echo "changes output: ${{ steps.git-check.outputs.changes }}"
+          echo "commit_changes input: ${{ inputs.commit_changes }}"
+
+      - name: Commit and push changes
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          echo "Committing changes..."
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -m "chore: update OpenAPI map specifications [skip ci]"
           git push
+          echo "Changes committed and pushed successfully"
