@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { assert } from 'chai';
 import 'mocha';
-import { OpenApiResponse } from '../../../src/openapi/decorators';
+import { OpenApiResponse } from '../../../server/open-api/decorators';
 
 describe('OpenApiResponse', () => {
   // Mock target, propertyKey and descriptor

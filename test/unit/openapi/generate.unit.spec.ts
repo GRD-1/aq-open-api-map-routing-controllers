@@ -4,8 +4,8 @@ import * as sinon from "sinon";
 import * as fs from "fs";
 import * as path from "path";
 import { MetadataArgsStorage } from "routing-controllers";
-import { generateOpenAPISpec } from "../../../src/openapi/generate";
-import { IOpenAPIMapConfig } from "../../../src/openapi/types";
+import { generateOpenAPISpec } from "../../../server/open-api/generate-map";
+import { IOpenAPIMapConfig } from "../../../server/open-api/types";
 import { SecuritySchemeObject } from "routing-controllers-openapi/node_modules/openapi3-ts/dist/model";
 
 describe("generateOpenAPISpec", () => {

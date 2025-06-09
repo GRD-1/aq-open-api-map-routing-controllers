@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { assert } from 'chai';
 import 'mocha';
-import { OpenApiBody } from '../../../src/openapi/decorators';
+import { OpenApiBody } from '../../../server/open-api/decorators';
 
 describe('OpenApiBody', () => {
   class TestRequestDto {

@@ -22,4 +22,4 @@ build/
 *~
 
 # dynamically generated api docs
-/openapi/
+/public/openapi/

@@ -75,7 +75,7 @@ module.exports = {
       },
     },
     {
-      files: ['src/**/*', 'test/**/*'],
+      files: ['server/**/*', 'test/**/*'],
       extends: ['airbnb-typescript/base', './lint/server.lint.js'],
       rules: {
         'prettier/prettier': 'error',

@@ -76,13 +76,13 @@ For typing the fields in DTOs we use [class-validator](https://www.npmjs.com/pac
 ### Feature structure
 
 ```
-src/
-├── openapi/
+server/
+├── open-api/
 │   ├── configs/                 # OpenAPI map configurations
 │   │   ├── all.config.ts       # Config for all controllers
 │   │   └── index.ts            # Map configs registry
 │   ├── decorators.ts           # Custom OpenAPI decorators
-│   ├── generate.ts             # OpenAPI spec generation logic
+│   ├── generate-map.ts             # OpenAPI spec generation logic
 │   └── types.ts                # Type definitions
 ├── controllers/                 # API Controllers
 │   ├── users.controller.ts     # User management endpoints
@@ -351,7 +351,7 @@ export const myNewMapConfig: OpenAPIMapConfig = {
     version: '1.0.0',
     description: 'API documentation for specific controllers'
   },
-  outputPath: path.join(process.cwd(), 'openapi', 'my-new-map.json')
+  outputPath: path.join(process.cwd(), 'open-api', 'my-new-map.json')
 };
 ```
 

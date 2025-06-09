@@ -5,8 +5,8 @@ import {
   OpenApiResponseSchema,
   OpenAPI,
   OpenApiAuth,
-} from '../openapi/decorators';
-import { OpenApiControllerDesc } from '../openapi/decorators';
+} from '../open-api/decorators';
+import { OpenApiControllerDesc } from '../open-api/decorators';
 import { GetThingsDtoRes, getAllThingsDescription } from './dto';
 import { BaseController, Controller, Get, Req, Res } from 'reef-framework';
 

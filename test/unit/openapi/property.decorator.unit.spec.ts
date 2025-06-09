@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { assert } from 'chai';
 import 'mocha';
-import { OpenApiProperty } from '../../../src/openapi/decorators';
+import { OpenApiProperty } from '../../../server/open-api/decorators';
 
 describe('OpenApiProperty', () => {
   // Mock target class and property

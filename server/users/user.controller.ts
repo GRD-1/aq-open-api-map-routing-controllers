@@ -15,7 +15,7 @@ import {
   OpenApiQuery,
   OpenApiResponse,
   OpenApiResponseSchema
-} from '../openapi/decorators';
+} from '../open-api/decorators';
 import {
   createUserDescription,
   CreateUserDtoReq,
@@ -32,7 +32,7 @@ import {patchUserDescription, updateUserDescription} from './dto/update-user.dto
 import {BaseController, Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, Res} from 'reef-framework';
 import {ApiError, ConflictError, NotFoundError, UnauthorizedError, ValidationError} from '../errors/api.error';
 import {Auth} from '../decorators/auth.decorator';
-import {DEFAULT_OPENAPI_SCHEMA_CONTENT} from "../openapi/configs/schemas";
+import {DEFAULT_OPENAPI_SCHEMA_CONTENT} from "../open-api/map-configs/schemas";
 
 @OpenApiAuth()
 @OpenApiJsonController('/users')

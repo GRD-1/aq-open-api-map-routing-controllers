@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { assert } from 'chai';
 import 'mocha';
-import { OpenApiControllerDesc } from '../../../src/openapi/decorators';
+import { OpenApiControllerDesc } from '../../../server/open-api/decorators';
 
 describe('OpenApiControllerDesc', () => {
   // Mock target class

@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import { assert } from 'chai';
 import 'mocha';
-import { OpenApiDefaultHttpStatus } from '../../../src/openapi/decorators';
-import { DEFAULT_OPENAPI_SCHEMA_CONTENT } from '../../../src/openapi/configs/schemas';
+import { OpenApiDefaultHttpStatus } from '../../../server/open-api/decorators';
+import { DEFAULT_OPENAPI_SCHEMA_CONTENT } from '../../../server/open-api/map-configs/schemas';
 
 describe('OpenApiDefaultHttpStatus', () => {
   // Mock target, propertyKey and descriptor

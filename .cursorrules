@@ -53,7 +53,7 @@
       ]
     },
     {
-      "pattern": "src/openapi/generate.ts",
+      "pattern": "src/openapi/generate-map.ts",
       "rules": [
         "Generate OpenAPI specs in JSON format to openapi/*.json",
         "Ensure all referenced schemas are collected in components.schemas",

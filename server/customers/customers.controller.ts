@@ -6,8 +6,8 @@ import {
   GetCustomerRequisitesDtoRes,
   getCustomerByIdDescription,
 } from './dto';
-import { OpenApiControllerDesc, OpenApiGet, OpenApiJsonController } from '../openapi/decorators';
-import { OpenAPI, OpenApiResponseSchema } from '../openapi/decorators';
+import { OpenApiControllerDesc, OpenApiGet, OpenApiJsonController } from '../open-api/decorators';
+import { OpenAPI, OpenApiResponseSchema } from '../open-api/decorators';
 
 @OpenApiJsonController('/customers')
 @OpenApiControllerDesc({

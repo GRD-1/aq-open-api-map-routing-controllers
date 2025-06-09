@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { createExpressServer } from 'routing-controllers';
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
-import OpenAPIController from './openapi/openapi.controller';
+import OpenApiController from './open-api/open-api.controller';
 import UsersController from './users/user.controller';
 import ThingsController from './things/things.controller';
 import CustomersController from './customers/customers.controller';
@@ -14,7 +14,7 @@ import { CustomLogger } from './logger';
 const logger = new CustomLogger();
 
 const app = createExpressServer({
-  controllers: [OpenAPIController, UsersController, ThingsController, CustomersController],
+  controllers: [OpenApiController, UsersController, ThingsController, CustomersController],
   middlewares: [AuthMiddleware, errorHandler(logger)],
   defaultErrorHandler: false,
   validation: true,

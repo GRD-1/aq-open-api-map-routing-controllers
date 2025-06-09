@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { assert } from 'chai';
 import 'mocha';
-import { OpenApiAuth } from '../../../src/openapi/decorators';
+import { OpenApiAuth } from '../../../server/open-api/decorators';
 
 describe('OpenApiAuth', () => {
   describe('Method Decorator', () => {

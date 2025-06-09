@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CustomLogger } from './logger';
 import { errorHandler } from './middleware/error-handler.middleware';
 import { testConnection } from './database';
-import OpenAPIController from './openapi/openapi.controller';
+import OpenApiController from './open-api/open-api.controller';
 import * as swaggerUi from 'swagger-ui-express';
 
 // Create Express app
@@ -52,7 +52,7 @@ reef.addErrorHandler(errorHandler);
 
 // Initialize controllers for OpenAPI documentation
 useExpressServer(app, {
-  controllers: [OpenAPIController],
+  controllers: [OpenApiController],
   routePrefix: '/api/v1',
   defaultErrorHandler: false,
   middlewares: []

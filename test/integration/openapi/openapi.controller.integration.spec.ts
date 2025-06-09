@@ -3,19 +3,19 @@ import 'mocha';
 import * as fs from 'fs';
 import * as path from 'path';
 import express from 'express';
-import OpenAPIController from '../../../src/openapi/openapi.controller';
-import { mapConfigs } from '../../../src/openapi/configs';
+import OpenApiController from '../../../server/open-api/open-api.controller';
+import { mapConfigs } from '../../../server/open-api/map-configs';
 import { DefaultCasters } from 'reef-framework/pkg/helpers/default-casters.helper';
 import { GenericLogger } from 'reef-framework/pkg/helpers/aq-base.types';
 
 describe('OpenAPIController', () => {
-  let controller: OpenAPIController;
+  let controller: OpenApiController;
   let app: express.Express;
   let mockLogger: GenericLogger;
 
   beforeEach(() => {
     app = express();
-    
+
     // Mock logger
     mockLogger = {
       debug: () => {},
@@ -25,7 +25,7 @@ describe('OpenAPIController', () => {
     };
 
     // Initialize controller with required dependencies
-    controller = new OpenAPIController(
+    controller = new OpenApiController(
       app,                          // Express app
       '/api/v1',                    // Main route path
       new DefaultCasters(),         // Default casters
@@ -48,7 +48,7 @@ describe('OpenAPIController', () => {
   describe('GET /openapi/json', () => {
     it('should generate and return OpenAPI spec for default "all" map', async () => {
       const result = await controller.getOpenAPIJson();
-      
+
       assert.isObject(result, 'Result should be an object');
       assert.deepNestedInclude(result, {
         info: {
@@ -64,14 +64,14 @@ describe('OpenAPIController', () => {
 
     it('should throw error for invalid map name', async () => {
       let error: Error | null = null;
-      
+
       try {
         await controller.getOpenAPIJson('invalid-map');
         assert.fail('Should have thrown an error');
       } catch (err) {
         error = err as Error;
       }
-      
+
       assert.instanceOf(error, Error, 'Should throw an Error instance');
       assert.include(error!.message, 'Invalid map name', 'Error message should mention invalid map');
       assert.include(error!.message, Object.keys(mapConfigs).join(', '), 'Error message should list available maps');
@@ -80,11 +80,11 @@ describe('OpenAPIController', () => {
     it('should create output file in the correct location', async () => {
       const result = await controller.getOpenAPIJson();
       const outputPath = path.join(process.cwd(), 'openapi', 'all.json');
-      
+
       assert.isTrue(fs.existsSync(outputPath), 'Output file should exist');
-      
+
       const fileContent = JSON.parse(fs.readFileSync(outputPath, 'utf-8'));
       assert.deepEqual(fileContent, result, 'File content should match the returned spec');
     });
   });
-}); 
+});
