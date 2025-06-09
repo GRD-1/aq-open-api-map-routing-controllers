@@ -27,19 +27,37 @@ jobs:
         run: npm ci
 
       - name: Ensure output directory exists
-        run: mkdir -p public/open-api
+        run: |
+          mkdir -p public/open-api
+          ls -la public/open-api
 
       - name: Generate OpenAPI map
         run: npm run generate:openapi-map
 
+      - name: List generated files
+        run: |
+          echo "Contents of public/open-api:"
+          ls -la public/open-api/
+          echo "File contents:"
+          cat public/open-api/all.json || echo "File not found"
+
       - name: Check for changes
         id: git-check
         run: |
-          # Stage the files first so git status can see them
+          echo "Current git status:"
+          git status
+
+          echo "Adding files to git:"
           git add public/open-api/*.json
-          # Check if there are any changes staged
+
+          echo "Git status after adding:"
+          git status
+
           if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Changes detected"
             echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes detected"
           fi
 
       - name: Commit and push changes
