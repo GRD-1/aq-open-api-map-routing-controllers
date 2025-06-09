@@ -1,0 +1,1230 @@
+{
+  "components": {
+    "schemas": {
+      "GetUsersResAlias": {
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique identifier of the user",
+            "example": 1
+          },
+          "email": {
+            "format": "email",
+            "type": "string",
+            "description": "Email address of the user",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "John Doe"
+          },
+          "last_login_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Date and time of the last user login, can be null",
+            "example": "2024-03-15T10:30:00Z"
+          },
+          "password_hash": {
+            "type": "string",
+            "description": "Hashed password for user authentication",
+            "example": "$2b$10$..."
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was created",
+            "example": "2024-03-15T10:00:00Z"
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was last updated",
+            "example": "2024-03-15T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "password_hash",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "GetUserByIdResAlias": {
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique identifier of the user",
+            "example": 1
+          },
+          "email": {
+            "format": "email",
+            "type": "string",
+            "description": "Email address of the user",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "John Doe"
+          },
+          "last_login_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Date and time of the last user login, can be null",
+            "example": "2024-03-15T10:30:00Z"
+          },
+          "password_hash": {
+            "type": "string",
+            "description": "Hashed password for user authentication",
+            "example": "$2b$10$..."
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was created",
+            "example": "2024-03-15T10:00:00Z"
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was last updated",
+            "example": "2024-03-15T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "password_hash",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CreateUserDtoRes": {
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique identifier of the user",
+            "example": 1
+          },
+          "email": {
+            "format": "email",
+            "type": "string",
+            "description": "User email address, must be a valid email format",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "John Doe"
+          },
+          "last_login_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Date and time of the last user login, can be null",
+            "example": "2024-03-15T10:30:00Z"
+          },
+          "password_hash": {
+            "type": "string",
+            "description": "Hashed password for user authentication",
+            "example": "$2b$10$..."
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was created",
+            "example": "2024-03-15T10:00:00Z"
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was last updated",
+            "example": "2024-03-15T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "password_hash",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "PostUserReqAlias": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string",
+            "description": "User email address, must be a valid email format",
+            "example": "user@example.com"
+          },
+          "password_hash": {
+            "type": "string",
+            "description": "Hashed password for user authentication",
+            "example": "$2b$10$..."
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "John Doe"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password_hash",
+          "name"
+        ]
+      },
+      "CreateUsersBulkDtoRes": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CreateUserDtoRes"
+            },
+            "type": "array",
+            "description": "Array of created users",
+            "example": [
+              {
+                "id": 1,
+                "email": "user1@example.com",
+                "name": "User One",
+                "last_login_at": null,
+                "created_at": "2024-03-19T12:00:00.000Z",
+                "updated_at": "2024-03-19T12:00:00.000Z"
+              },
+              {
+                "id": 2,
+                "email": "user2@example.com",
+                "name": "User Two",
+                "last_login_at": null,
+                "created_at": "2024-03-19T12:00:00.000Z",
+                "updated_at": "2024-03-19T12:00:00.000Z"
+              }
+            ]
+          },
+          "extraFields": {
+            "$ref": "#/components/schemas/ExtraFields",
+            "type": "object",
+            "description": "Extra fields object"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ]
+      },
+      "ExtraFields": {
+        "properties": {
+          "extraFieldOne": {
+            "type": "string"
+          },
+          "extraFieldTwo": {
+            "type": "number"
+          },
+          "superExtraFields": {
+            "$ref": "#/components/schemas/SuperExtraFields",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "SuperExtraFields": {
+        "properties": {
+          "superExtraFieldOne": {
+            "type": "string"
+          },
+          "superExtraFieldTwo": {
+            "type": "number"
+          },
+          "superPuperExtraFields": {
+            "$ref": "#/components/schemas/SuperPuperExtraFields",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "SuperPuperExtraFields": {
+        "properties": {
+          "superPuperExtraFieldOne": {
+            "type": "string"
+          },
+          "superPuperExtraFieldTwo": {
+            "type": "number"
+          },
+          "superPuperExtraFieldThree": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "PostUsersBulkReqAlias": {
+        "properties": {
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/PostUserReqAlias"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "users"
+        ]
+      },
+      "PutUserResAlias": {
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique identifier of the user",
+            "example": 1
+          },
+          "email": {
+            "format": "email",
+            "type": "string",
+            "description": "Email address of the user",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "John Doe"
+          },
+          "last_login_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Date and time of the last user login, can be null",
+            "example": "2024-03-15T10:30:00Z"
+          },
+          "password_hash": {
+            "type": "string",
+            "description": "Hashed password for user authentication",
+            "example": "$2b$10$..."
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was created",
+            "example": "2024-03-15T10:00:00Z"
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was last updated",
+            "example": "2024-03-15T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "password_hash",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "PatchUserResAlias": {
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique identifier of the user",
+            "example": 1
+          },
+          "email": {
+            "format": "email",
+            "type": "string",
+            "description": "Email address of the user",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "John Doe"
+          },
+          "last_login_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Date and time of the last user login, can be null",
+            "example": "2024-03-15T10:30:00Z"
+          },
+          "password_hash": {
+            "type": "string",
+            "description": "Hashed password for user authentication",
+            "example": "$2b$10$..."
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was created",
+            "example": "2024-03-15T10:00:00Z"
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Timestamp when the user account was last updated",
+            "example": "2024-03-15T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "password_hash",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "PostUserLoginResAlias": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "Access token for API authentication",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "Refresh token for obtaining new access tokens",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "expires_in": {
+            "type": "number",
+            "description": "Token expiration time in seconds",
+            "example": 15552000
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in"
+        ]
+      },
+      "GetThingsResAlias": {
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "GetCustomersResAlias": {
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "nestedFields": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ],
+            "description": "Nested customer fields",
+            "$ref": "#/components/schemas/NestedCustomerFieldsAlias"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "phone",
+          "created_at",
+          "updated_at",
+          "nestedFields"
+        ]
+      },
+      "NestedCustomerFieldsAlias": {
+        "properties": {
+          "nestdOne": {
+            "type": "number"
+          },
+          "nestedTwo": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nestdOne",
+          "nestedTwo"
+        ]
+      },
+      "GetCustomerByIdResAlias": {
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updated_at": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "phone",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "GetCustomerRequisitesResAlias": {
+        "properties": {
+          "bank_name": {
+            "type": "string"
+          },
+          "bank_account": {
+            "type": "string"
+          },
+          "bank_code": {
+            "type": "string"
+          },
+          "tax_id": {
+            "type": "string"
+          },
+          "company_name": {
+            "type": "string"
+          },
+          "company_address": {
+            "type": "string"
+          },
+          "customer_id": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bank_name",
+          "bank_account",
+          "bank_code",
+          "tax_id",
+          "company_name",
+          "company_address",
+          "customer_id"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your JWT token in the format: Bearer <token>"
+      }
+    }
+  },
+  "info": {
+    "title": "AQ Open API Map - All Controllers",
+    "version": "1.0.0",
+    "description": "API documentation for all available controllers"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/users/": {
+      "get": {
+        "operationId": "UsersController.getAllUsers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string",
+              "description": "Filter users by name (partial match)",
+              "example": "John"
+            }
+          },
+          {
+            "in": "query",
+            "name": "email",
+            "schema": {
+              "type": "string",
+              "description": "Filter users by email (partial match)",
+              "example": "john@example.com"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ravoly",
+            "schema": {
+              "type": "string",
+              "description": "ravoly ravolu ravoly",
+              "example": "ravoly!!!"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PatchUserResAlias"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "Not authorised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Not authorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all users",
+        "tags": [
+          "Users"
+        ],
+        "description": "Retrieves a list of all users in the system",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "UsersController.createUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostUserReqAlias"
+              }
+            }
+          },
+          "description": "PostUserReqAlias",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUserDtoRes"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "summary": "Create a new user",
+        "tags": [
+          "Users"
+        ],
+        "description": "Creates a new user with the provided data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController.getUserById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatchUserResAlias"
+                }
+              }
+            },
+            "description": ""
+          },
+          "204": {
+            "description": "the user was deleted"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "summary": "Get user by ID",
+        "tags": [
+          "Users"
+        ],
+        "description": "Retrieves a specific user by their ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "UsersController.updateUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatchUserResAlias"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Update a user",
+        "tags": [
+          "Users"
+        ],
+        "description": "Updates an existing user with the provided data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController.patchUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatchUserResAlias"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Partially update a user",
+        "tags": [
+          "Users"
+        ],
+        "description": "Updates specific fields of an existing user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController.deleteUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Delete a user",
+        "tags": [
+          "Users"
+        ],
+        "description": "Deletes an existing user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/bulk": {
+      "post": {
+        "operationId": "UsersController.createUsers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostUsersBulkReqAlias"
+              }
+            }
+          },
+          "description": "PostUsersBulkReqAlias",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUsersBulkDtoRes"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict - One or more users with these emails already exist"
+          }
+        },
+        "summary": "Create multiple users",
+        "tags": [
+          "Users"
+        ],
+        "description": "Creates multiple users in a single request",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/login": {
+      "post": {
+        "operationId": "UsersController.login",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostUserLoginResAlias"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "Unauthorized - Invalid credentials"
+          }
+        },
+        "summary": "User login",
+        "tags": [
+          "Users"
+        ],
+        "description": "Authenticates a user and returns access tokens"
+      }
+    },
+    "/things/": {
+      "get": {
+        "operationId": "ThingsController.getAllThings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GetThingsResAlias"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get all things",
+        "tags": [
+          "Things"
+        ],
+        "description": "Retrieves a list of all things in the system"
+      }
+    },
+    "/customers/": {
+      "get": {
+        "operationId": "CustomersController.getAllCustomers",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GetCustomersResAlias"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get all customers",
+        "tags": [
+          "Customers"
+        ]
+      }
+    },
+    "/customers/{id}": {
+      "get": {
+        "operationId": "CustomersController.getCustomerById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCustomerByIdResAlias"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get customer by ID",
+        "tags": [
+          "Customers"
+        ],
+        "description": "Retrieves a specific customer by their ID"
+      }
+    },
+    "/customers/{id}/requisites": {
+      "get": {
+        "operationId": "CustomersController.getCustomerRequisites",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCustomerRequisitesResAlias"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get customer requisites",
+        "tags": [
+          "Customers"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Users",
+      "description": "Controller for managing user accounts. Provides full CRUD operations"
+    },
+    {
+      "name": "Things",
+      "description": "Controller for managing things. Provides basic operations"
+    },
+    {
+      "name": "Customers",
+      "description": "Controller for managing user accounts. Provides full CRUD operations"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}
