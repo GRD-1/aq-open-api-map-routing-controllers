@@ -22,5 +22,4 @@ build/
 *~
 
 # Keep OpenAPI directory but ignore non-JSON files
-public/open-api/*
 !public/open-api/*.json
