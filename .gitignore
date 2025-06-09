@@ -20,3 +20,9 @@ build/
 *.swp
 *.swo
 *~
+
+# Ignore everything in public except OpenAPI specs
+public/*
+!public/open-api/
+public/open-api/*
+!public/open-api/*.json
